@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "0.0.1",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "ts-node src/app.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.2.1",
+    "lodash": "^4.17.23",
+    "ts-node": "^10.9.2",
+    "uuid": "^13.0.0",
+    "winston": "^3.19.0"
+  }
+}
