@@ -1,11 +1,11 @@
 import mitt from "mitt";
 import { io, Socket } from "socket.io-client";
 
-import { type AccountRecord } from "../stores/account";
+import { type AccountRecordInfo } from "../stores/account";
 
 type SocketEvents = {
     "ack_login_result": { success: boolean, message: string };
-    "evt_account_info": { accountInfo: AccountRecord };
+    "evt_account_info": { accountInfo: AccountRecordInfo };
 };
 const bus = mitt<SocketEvents>();
 

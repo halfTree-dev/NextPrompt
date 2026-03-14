@@ -1,0 +1,93 @@
+import { defineStore } from "pinia";
+import type { AccountRecordInfo } from "./account";
+
+export interface RelatedCharacter {
+    characterID: string;
+    [key: string]: any;
+}
+
+export interface Tag {
+    name: string;
+    [key: string]: any;
+}
+
+export interface InputSlot {
+    inputHint: string;
+    inputID: string;
+    [key: string]: any;
+}
+
+export interface InputStringBar {
+    inputHint: string;
+    inputContent: string;
+    [key: string]: any;
+}
+
+export interface GameNode {
+    nodeID: string;
+
+    displayText: string;
+    description: string;
+
+    category?: string;
+
+    relatedCharacters: RelatedCharacter[];
+
+    storage?: Record<string, any>;
+
+    invisible?: boolean;
+    lifeTimeRounds?: number;
+    coolDownRounds?: number;
+
+    inStackable?: boolean;
+    count?: number;
+
+    tags?: Tag[];
+
+    inputSlots?: Map<string, InputSlot>;
+    inputStringBars?: Map<string, InputStringBar>;
+
+    interactable?: boolean;
+}
+
+export interface Attributes {
+    name: string;
+    value: number;
+    [key: string]: any;
+}
+
+export interface GameCharacter {
+    characterID: string;
+
+    attributes: Map<string, Attributes>;
+    storage?: Record<string, any>;
+
+    accountRecord?: AccountRecordInfo;
+
+    operationLock: boolean;
+    readyForEndTurn: boolean;
+}
+
+export interface GameLevelInfo {
+    levelID: string;
+    levelName: string;
+    currRound: number;
+    onlineAccountNames: string[];
+    nodes: Map<string, GameNode>;
+    characters: Map<string, GameCharacter>;
+}
+
+export interface ContextMessage {
+    sender: string;
+    content: string;
+    timestamp: number;
+    relatedNodeIDs?: string[];
+    sendType?: 'system' | 'character' | 'chat';
+}
+
+export const useGameStore = defineStore('game', {
+    state: () => ({
+        gameLevelInfo: null as GameLevelInfo | null,
+        contextMessages: [] as ContextMessage[]
+    })
+});

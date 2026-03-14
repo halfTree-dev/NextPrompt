@@ -5,7 +5,7 @@ class AccountManager {
     constructor() {}
 
     init() {
-        bus.on("login_result", (payload) => {
+        bus.on("ack_login_result", (payload) => {
             const accountStore = useAccountStore();
             if (payload.success) {
                 console.log(payload.message);
@@ -15,7 +15,7 @@ class AccountManager {
             accountStore.isLoginSuccess = payload.success;
         });
 
-        bus.on("account_info", (payload) => {
+        bus.on("evt_account_info", (payload) => {
             const accountStore = useAccountStore();
             accountStore.accountInfo = payload.accountInfo;
         });

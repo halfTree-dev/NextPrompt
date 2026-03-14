@@ -1,11 +1,9 @@
 import { defineStore } from 'pinia';
 
-export interface AccountRecord {
-    // 记录账号鉴权信息
+export interface AccountRecordInfo {
+    // 记录账号基本信息
     accountId: string;
     userName: string;
-    passwordHash: string;
-    salt: string;
     // 记录玩家数据
     createdAt: number;
     spawnedWordsCnt: number; // 玩家阅读过的文本词汇数量
@@ -15,6 +13,6 @@ export interface AccountRecord {
 export const useAccountStore = defineStore('account', {
     state: () => ({
         isLoginSuccess: false,
-        accountInfo: null as AccountRecord | null
+        accountInfo: null as AccountRecordInfo | null
     })
 });

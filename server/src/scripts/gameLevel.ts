@@ -4,8 +4,6 @@ import { NarratorManager } from "./managers/narratorManager";
 import { NodeManager } from "./managers/nodeManager";
 import { ToolManager } from "./managers/toolManager";
 
-import { StoryLoader } from "./managers/storyLoader";
-
 import socketService from "../services/socketManager";
 
 export class GameLevel {

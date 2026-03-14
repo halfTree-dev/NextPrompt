@@ -1,13 +1,16 @@
 import { AccountRecord } from "../../services/dataManger";
 
 export interface Attributes {
+    name: string;
+    value: number;
     [key: string]: any;
 }
 
 export class GameCharacter {
     characterID: string = '';
 
-    attributes: Attributes;
+    attributes: Map<string, Attributes>;
+    storage?: Record<string, any>;
 
     accountRecord?: AccountRecord;
 
@@ -15,16 +18,16 @@ export class GameCharacter {
     readyForEndTurn: boolean;
 
     constructor() {
-        this.attributes = {};
+        this.attributes = new Map();
         this.operationLock = false;
         this.readyForEndTurn = false;
     }
 
     setAttribute(attrName: string, attrValue: any): void {
-        this.attributes[attrName] = attrValue;
+        this.attributes.set(attrName, attrValue);
     }
 
     getAttribute(attrName: string): any {
-        return this.attributes[attrName];
+        return this.attributes.get(attrName);
     }
 }

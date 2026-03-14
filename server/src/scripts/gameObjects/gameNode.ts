@@ -38,6 +38,8 @@ export class GameNode {
 
     relatedCharacters: RelatedCharacter[] = [];
 
+    storage?: Record<string, any> = {};
+
     invisible?: boolean = false;
     lifeTimeRounds?: number = 0;
     coolDownRounds?: number = 0;
