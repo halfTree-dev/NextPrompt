@@ -8,7 +8,7 @@ export const useStyleStore = defineStore('style', () => {
         background: '#1e1e1e',
         panel: '#2d2d2d',
         text: '#ffffff',
-        primary: '#7ed0d0',
+        primary: '#267cd2',
         border: '#3c3c3c',
         divider: '#5a5a5a'
     });

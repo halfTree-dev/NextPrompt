@@ -55,11 +55,27 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted, computed } from 'vue'
+
 import { useLobbyStore } from '../stores/lobby'
+import { useAccountStore } from '../stores/account'
+
+import { router } from '../router'
+import { popupNotify } from '../services/popup'
 
 const lobbyStore = useLobbyStore()
 const levels = computed(() => lobbyStore.lobbyInfo?.levels || [])
 const messages = computed(() => lobbyStore.chatMessages || [])
+
+const accountStore = useAccountStore()
+if (!accountStore.isLoginSuccess) {
+    popupNotify({
+        title: "抱歉，我不认识你",
+        message: "这位朋友，可以先登陆再进入大厅吗？我不能允许没有身份的访客进入，这是我的职责，还请谅解。",
+        duration: 3000,
+    })
+    router.push("/")
+}
+
 
 // 下方部分负责拖动调整左右面板宽度的逻辑
 const screenWidth = window.innerWidth

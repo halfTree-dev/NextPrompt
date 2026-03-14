@@ -6,6 +6,18 @@ import { type AccountRecordInfo } from "../stores/account";
 type SocketEvents = {
     "ack_login_result": { success: boolean, message: string };
     "evt_account_info": { accountInfo: AccountRecordInfo };
+    "ack_room_list": any;
+    "ack_join_room": any;
+    "ack_leave_room": any;
+    "ack_update_input": any;
+    "ack_send_interact": any;
+    "ack_send_end_turn_ready": any;
+    "evt_send_game_context": any;
+    "evt_send_notify": any;
+    "evt_send_alert": any;
+    "evt_send_effect": any;
+    "ack_send_chat": any;
+    "evt_update_chat": any;
 };
 const bus = mitt<SocketEvents>();
 
@@ -27,15 +39,24 @@ class SocketClient {
             console.log("与服务器的连接已断开");
         });
 
-        this.socket.on("ack_login_result", (payload) => {
-            bus.emit("ack_login_result", payload);
+        this.socket.on("ack_login_result", (payload) => bus.emit("ack_login_result", payload));
+        this.socket.on("evt_account_info", (payload) => bus.emit("evt_account_info", payload));
+        this.socket.on("ack_room_list", (payload) => bus.emit("ack_room_list", payload));
+        this.socket.on("ack_join_room", (payload) => bus.emit("ack_join_room", payload));
+        this.socket.on("ack_leave_room", (payload) => bus.emit("ack_leave_room", payload));
+        this.socket.on("ack_update_input", (payload) => bus.emit("ack_update_input", payload));
+        this.socket.on("ack_send_interact", (payload) => bus.emit("ack_send_interact", payload));
+        this.socket.on("ack_send_end_turn_ready", (payload) => bus.emit("ack_send_end_turn_ready", payload));
+        this.socket.on("evt_send_game_context", (payload) => bus.emit("evt_send_game_context", payload));
+        this.socket.on("evt_send_notify", (payload) => bus.emit("evt_send_notify", payload));
+        this.socket.on("evt_send_alert", (payload) => bus.emit("evt_send_alert", payload));
+        this.socket.on("evt_send_effect", (payload) => bus.emit("evt_send_effect", payload));
+        this.socket.on("ack_send_chat", (payload) => bus.emit("ack_send_chat", payload));
+        this.socket.on("evt_update_chat", (payload) => bus.emit("evt_update_chat", payload));
+    }
 
-        });
-
-        this.socket.on("evt_account_info", (payload) => {
-            bus.emit("evt_account_info", payload);
-
-        });
+    public emit(event: string, payload: any) {
+        this.socket.emit(event, payload);
     }
 }
 

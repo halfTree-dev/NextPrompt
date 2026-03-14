@@ -88,12 +88,24 @@
 import { ref, onUnmounted, computed } from 'vue'
 import { useGameStore, type GameNode } from '../stores/game'
 import { useAccountStore } from '../stores/account';
+import { popupNotify } from '../services/popup';
+import { router } from '../router';
 
 const gameStore = useGameStore()
 const level = computed(() => gameStore.gameLevelInfo);
 const messages = computed(() => gameStore.contextMessages || [])
 
 const accountStore = useAccountStore()
+
+if (!accountStore.isLoginSuccess) {
+    popupNotify({
+        title: "抱歉，我不认识你",
+        message: "这位朋友，可以先登陆再进入大厅吗？我不能允许没有身份的访客进入，这是我的职责，还请谅解。",
+        duration: 3000,
+    })
+    router.push("/")
+}
+
 const myAccount = computed(() => accountStore.accountInfo)
 
 const myCharacter = computed(() => {

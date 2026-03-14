@@ -12,9 +12,9 @@
         <div class="login-right">
             <transition name="fade" mode="out-in">
                 <section class="login-form form-box" v-if="showForm === 'login'">
-                    <input type="text" placeholder="用户名" />
-                    <input type="password" placeholder="密码" />
-                    <button class="btn-primary">登陆</button>
+                    <input type="text" v-model="loginUserName" placeholder="用户 ID" />
+                    <input type="password" v-model="loginPassWord" placeholder="密码" />
+                    <button class="btn-primary" @click="sendLogin">登陆</button>
                     <div class="login-hint">
                         <p>如果没有账号的话，你可以试着</p>
                         <button class="btn-text" @click="showForm = 'register'">注册</button>
@@ -22,10 +22,10 @@
                 </section>
 
                 <section class="register-form form-box" v-else>
-                    <input type="text" placeholder="用户名" />
-                    <input type="password" placeholder="密码" />
-                    <input type="password" placeholder="确认密码（应当和上面的密码相同）" />
-                    <button class="btn-primary">注册</button>
+                    <input type="text" v-model="registerUserName" placeholder="用户名" />
+                    <input type="password" v-model="registerPassword" placeholder="密码" />
+                    <input type="password" v-model="confirmPassword" placeholder="确认密码（应当和上面的密码相同）" />
+                    <button class="btn-primary" @click="sendRegister">注册</button>
                     <div class="login-hint">
                         <p>为了将故事和你联系起来，我需要你的名字</p>
                         <button class="btn-text" @click="showForm = 'login'">登陆</button>
@@ -33,13 +33,108 @@
                 </section>
             </transition>
         </div>
+
+
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-
+import { popupNotify } from '../services/popup'
+import socketClient from '../services/socket'
+import type { AccountRecordInfo } from '../stores/account';
 const showForm = ref<'login' | 'register'>('register')
+
+const loginUserName = ref('');
+const loginPassWord = ref('');
+const registerUserName = ref('');
+const registerPassword = ref('');
+const confirmPassword = ref('');
+
+async function getHashedPassword(password: string) {
+    if (password.length === 0) return 'whynotsetapasswordyoucirno999';
+    const msgUint8 = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sendLogin() {
+    if (loginUserName.value.length === 0) {
+        popupNotify({
+            title: '我想你需要注意一下',
+            message: `朋友，你貌似没有输入用户 ID，请输入你的用户 ID，这样我们才能找到你的账号！`,
+            duration: 3000,
+        })
+        return;
+    }
+    if (loginPassWord.value.length === 0) {
+        popupNotify({
+            title: '我想你需要注意一下',
+            message: `朋友，你貌似没有输入密码，是因为你的账户没有密码吗？理论上这也可以，不过我建议你设置一个，这样安全一点！`,
+            duration: 3000,
+        })
+    }
+    popupNotify({
+        title: '正在发送登录请求',
+        message: `请稍等一会 ${loginUserName.value}，我们正在验证你的身份，可以先喝口水休息一下!`,
+        duration: 3000,
+    })
+    const hashedPassword = await getHashedPassword(loginPassWord.value);
+    socketClient.emit('req_user_login', { userName: loginUserName.value, password: hashedPassword })
+}
+
+async function sendRegister() {
+    if (registerUserName.value.length === 0) {
+        popupNotify({
+            title: '我想你需要注意一下',
+            message: `朋友，可以告诉我你的名字吗？`,
+            duration: 3000,
+        })
+        return;
+    }
+    if (registerPassword.value !== confirmPassword.value) {
+        popupNotify({
+            title: '我想你需要注意一下',
+            message: `朋友，你两次输入的密码不一致，请确认你的密码输入无误！`,
+            duration: 3000,
+        })
+        return;
+    }
+    if (registerPassword.value.length === 0) {
+        popupNotify({
+            title: '我想你需要注意一下',
+            message: `朋友，你貌似没有为账号设置密码，理论上这也可以，不过我建议你设置一个，这样安全一点！`,
+            duration: 3000,
+        })
+    }
+    popupNotify({
+        title: '正在发送注册请求',
+        message: `请稍等一会 ${registerUserName.value}，我们正在创建你的账号，可以先喝口水休息一下！`,
+        duration: 3000,
+    })
+    const hashedPassword = await getHashedPassword(registerPassword.value);
+    socketClient.emit('req_user_signup', { userName: registerUserName.value, password: hashedPassword })
+}
+
+if (localStorage.getItem("accountInfo")) {
+    showForm.value = 'login';
+    const accountInfo = JSON.parse(localStorage.getItem("accountInfo")!) as AccountRecordInfo;
+    if (accountInfo.userName) {
+        loginUserName.value = accountInfo.accountId;
+    }
+    popupNotify({
+        title: '你好像有点脸熟',
+        message: `哦！我记起来了，你是 ${accountInfo.userName} 对吧！你应该是想登陆这个账号对吗，我帮你把用户 ID ${accountInfo.accountId} 填好了，怎么样？`,
+        duration: 6000,
+    })
+} else {
+    popupNotify({
+        title: '没见过的生面孔',
+        message: `这位朋友，我也是第一次见到你呢，你应该先注册一个账号才能玩游戏。如果你已经有账号的话，可以直接登录，这样我就能记起来你了！`,
+        duration: 6000,
+    })
+}
 </script>
 
 <style lang="css" scoped>

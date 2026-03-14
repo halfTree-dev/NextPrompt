@@ -22,12 +22,40 @@ class SocketService extends EventEmitter {
             logger.info(`Socket connected: ${socket.id}`);
             this.emit("user_connected", socket);
 
-            socket.on("req_user_signup", (userName: string, password: string) => {
-                this.emit("req_user_signup", socket, userName, password);
+            socket.on("req_user_signup", (payload: { userName: string; password: string }) => {
+                this.emit("req_user_signup", socket, payload.userName, payload.password);
             });
 
-            socket.on("req_user_login", (userId: string, password: string) => {
-                this.emit("req_user_login", socket, userId, password);
+            socket.on("req_user_login", (payload: { userName: string; password: string }) => {
+                this.emit("req_user_login", socket, payload.userName, payload.password);
+            });
+
+            socket.on("req_room_list", (payload: any) => {
+                this.emit("req_room_list", socket, payload);
+            });
+
+            socket.on("req_join_room", (payload: any) => {
+                this.emit("req_join_room", socket, payload);
+            });
+
+            socket.on("req_leave_room", (payload: any) => {
+                this.emit("req_leave_room", socket, payload);
+            });
+
+            socket.on("req_update_input", (payload: any) => {
+                this.emit("req_update_input", socket, payload);
+            });
+
+            socket.on("req_send_interact", (payload: any) => {
+                this.emit("req_send_interact", socket, payload);
+            });
+
+            socket.on("req_send_end_turn_ready", (payload: any) => {
+                this.emit("req_send_end_turn_ready", socket, payload);
+            });
+
+            socket.on("req_send_chat", (payload: any) => {
+                this.emit("req_send_chat", socket, payload);
             });
 
             socket.on("disconnect", () => {
@@ -38,12 +66,12 @@ class SocketService extends EventEmitter {
         });
     }
 
-    public emitMessageToSocket(socketId: string, topicName: string, ...messages: unknown[]) {
+    public emitMessageToSocket(socketId: string, topicName: string, payload: object) {
         if (this.io) {
             const socket = this.io.sockets.sockets.get(socketId);
             if (socket && socket.connected) {
                 try {
-                    socket.emit(topicName, messages);
+                    socket.emit(topicName, payload);
                 } catch (err) {
                     logger.error(`向 socket ${socketId} 发送消息时发生错误： ${err}`);
                 }
@@ -51,20 +79,20 @@ class SocketService extends EventEmitter {
         }
     }
 
-    public emitMessageToRoom(roomName: string, topicName: string, ...messages: unknown[]) {
+    public emitMessageToRoom(roomName: string, topicName: string, payload: object) {
         if (this.io) {
             try {
-                this.io.to(roomName).emit(topicName, messages);
+                this.io.to(roomName).emit(topicName, payload);
             } catch (err) {
                 logger.error(`向房间 ${roomName} 发送消息时发生错误： ${err}`);
             }
         }
     }
 
-    public emitMessageToAll(topicName: string, ...messages: unknown[]) {
+    public emitMessageToAll(topicName: string, payload: object) {
         if (this.io) {
             try {
-                this.io.emit(topicName, messages);
+                this.io.emit(topicName, payload);
             } catch (err) {
                 logger.error(`向所有连接的客户端发送消息时发生错误： ${err}`);
             }
