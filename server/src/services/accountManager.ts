@@ -71,13 +71,13 @@ class AccountManager extends EventEmitter {
         const account = dataManager.registerAccount(userName, password);
         if (!account) {
             logger.warn(`用户 ${userName} 注册失败，socket=${socket.id}`);
-            socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: false, message: "注册失败，用户名可能已存在" });
+            socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: false, message: "出于未知原因，注册失败，请务必告诉开发者这个问题！" });
             return false;
         }
 
         this.onlineAccounts.set(socket.id, account);
         logger.info(`用户 ${userName} 已上线，socket=${socket.id}, accountId=${account.accountId}`);
-        socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: true, message: "登陆成功" });
+        socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: true, message: "注册并登陆成功！" });
         socketService.emitMessageToSocket(socket.id, "evt_account_info", { accountInfo: this.getAccountInfoForClient(account) });
         return true;
 
@@ -98,13 +98,18 @@ class AccountManager extends EventEmitter {
             return false;
         }
 
+        if (this.onlineAccounts.has(socket.id)) {
+            logger.warn(`用户 ${account.accountId} 已经在线了，socket=${socket.id}`);
+            socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: false, message: "出于某些原因，你的账号已经在一个其它终端登陆，所以我们无法为你当前的终端绑定身份。" });
+            return false;
+        }
+
         this.onlineAccounts.set(socket.id, account);
         logger.info(`用户登录成功，socket=${socket.id}, accountId=${account.accountId}`);
         socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: true, message: "登陆成功" });
         socketService.emitMessageToSocket(socket.id, "evt_account_info", { accountInfo: this.getAccountInfoForClient(account) });
 
         return true;
-
     }
 
     handleUserDisconnect(socket: Socket) {

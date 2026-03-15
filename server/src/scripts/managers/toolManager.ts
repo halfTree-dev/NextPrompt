@@ -3,7 +3,7 @@ import { GameLevel } from '../gameLevel';
 import { ChatGLMToolCall, ToolSchema } from '../gameObjects/gameNarrator';
 
 export interface ToolContext {
-    story: GameLevel;
+    level: GameLevel;
     logger: typeof logger;
     [key: string]: any;
 }

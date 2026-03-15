@@ -62,6 +62,10 @@ class SocketService extends EventEmitter {
                 this.emit("req_send_end_turn_ready", socket, payload);
             });
 
+            socket.on("req_send_game_chat", (payload: { content: string }) => {
+                this.emit("req_send_game_chat", socket, payload);
+            });
+
             socket.on("disconnect", () => {
                 logger.info(`Socket disconnected: ${socket.id}`);
                 this.emit("req_user_disconnect", socket);
@@ -69,6 +73,19 @@ class SocketService extends EventEmitter {
 
         });
     }
+
+    public getSocketsInRoom(roomName: string): Socket[] {
+        if (!this.io) { return []; }
+        const room = this.io.sockets.adapter.rooms.get(roomName);
+        if (!room) { return []; }
+        const sockets: Socket[] = [];
+        room.forEach(socketId => {
+            const socket = this.io!.sockets.sockets.get(socketId);
+            if (socket) { sockets.push(socket); }
+        });
+        return sockets;
+    }
+
 
     public emitMessageToSocket(socketId: string, topicName: string, payload: object) {
         if (this.io) {

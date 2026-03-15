@@ -1,7 +1,7 @@
 import { GameNarrator } from "../gameObjects/gameNarrator";
 
 export class NarratorManager {
-    private narrator: GameNarrator;
+    public narrator: GameNarrator;
 
     constructor() {
         this.narrator = new GameNarrator();

@@ -1,4 +1,4 @@
-import { useGameStore, type GameLevelInfo } from "../stores/game";
+import { useGameStore, type ContextMessage, type GameLevelInfo } from "../stores/game";
 import { popupAlert, popupNotify } from "./popup";
 import { bus } from "./socket";
 
@@ -22,6 +22,25 @@ class GameManager {
         bus.on("ack_send_end_turn_ready", (payload: any) => {
             console.log("准备结束回合状态更新", payload);
         });
+
+
+        bus.on("evt_send_game_context", (payload: GameLevelInfo) => {
+            const gameStore = useGameStore();
+            payload.nodes = new Map(Object.entries(payload.nodes || {}))
+            payload.characters = new Map(Object.entries(payload.characters || {}))
+            gameStore.gameLevelInfo = payload;
+        });
+
+        bus.on("evt_send_message_context", (payload: ContextMessage[]) => {
+            const gameStore = useGameStore();
+            gameStore.contextMessages = payload;
+        });
+
+        bus.on("evt_update_message_context", (payload: ContextMessage) => {
+            const gameStore = useGameStore();
+            gameStore.contextMessages.push(payload);
+        });
+
 
         bus.on("evt_send_notify", (payload: any) => {
             if (payload && payload.title && payload.message && payload.duration) {

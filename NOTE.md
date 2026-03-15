@@ -13,11 +13,14 @@
 - 后端到前端：ack_update_input, ack_send_interact, ack_send_end_turn_ready,
 
 - 后端到前端：evt_send_game_context
+- 后端到前端：evt_send_message_context, evt_update_message_context
+
+- 前端到后端：req_send_game_chat
 
 ## Manage Notify
 - 后端到前端：evt_send_notify, evt_send_alert, evt_send_effect
 
-### Manage Chat
+
 
 - 以 req 前缀的消息表示路由是客户端请求
 - 以 ack 前缀的消息表示路由是服务器对客户端请求的响应

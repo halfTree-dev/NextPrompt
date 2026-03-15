@@ -23,7 +23,7 @@ export interface InputStringBar {
     [key: string]: any;
 }
 
-export interface GameNode {
+export interface GameNodeInfo {
     nodeID: string;
 
     displayText: string;
@@ -56,7 +56,7 @@ export interface Attributes {
     [key: string]: any;
 }
 
-export interface GameCharacter {
+export interface GameCharacterInfo {
     characterID: string;
 
     attributes: Map<string, Attributes>;
@@ -73,8 +73,8 @@ export interface GameLevelInfo {
     levelName: string;
     currRound: number;
     onlineAccountNames: string[];
-    nodes: Map<string, GameNode>;
-    characters: Map<string, GameCharacter>;
+    nodes: Map<string, GameNodeInfo>;
+    characters: Map<string, GameCharacterInfo>;
 }
 
 export interface ContextMessage {
@@ -89,5 +89,5 @@ export const useGameStore = defineStore('game', {
     state: () => ({
         gameLevelInfo: null as GameLevelInfo | null,
         contextMessages: [] as ContextMessage[]
-    })
+    }),
 });

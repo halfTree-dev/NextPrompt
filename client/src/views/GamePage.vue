@@ -66,7 +66,7 @@
                         @input="autoResize"
                         ref="chatInput"
                     ></textarea>
-                    <button class="send-btn">发送给其它玩家</button>
+                    <button class="send-btn" @click="sendGameMessage">发送给其它玩家</button>
                 </div>
             </section>
         </main>
@@ -86,10 +86,11 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted, computed } from 'vue'
-import { useGameStore, type GameNode } from '../stores/game'
+import { useGameStore, type GameNodeInfo } from '../stores/game'
 import { useAccountStore } from '../stores/account';
 import { popupNotify } from '../services/popup';
 import { router } from '../router';
+import socketClient from '../services/socket';
 
 const gameStore = useGameStore()
 const level = computed(() => gameStore.gameLevelInfo);
@@ -109,7 +110,7 @@ if (!accountStore.isLoginSuccess) {
 const myAccount = computed(() => accountStore.accountInfo)
 
 const myCharacter = computed(() => {
-    if (!level.value || !myAccount.value) return null
+    if (!level.value || !myAccount.value || !level.value.characters) return null
     return level.value.characters.get(myAccount.value.accountId) || null
 })
 const myAttributesList = computed(() => {
@@ -117,8 +118,8 @@ const myAttributesList = computed(() => {
     return Array.from(myCharacter.value.attributes.entries()).map(([name, value]) => ({ name, value }))
 })
 const myNodesList = computed(() => {
-    if (!myCharacter.value || !level.value) return []
-    const resultNodes : Array<GameNode> = [];
+    if (!myCharacter.value || !level.value || !level.value.nodes) return []
+    const resultNodes : Array<GameNodeInfo> = [];
     level.value.nodes.forEach(node => {
         if (node.relatedCharacters.some(rc => rc.characterID === myCharacter.value?.characterID)) {
             resultNodes.push(node);
@@ -127,7 +128,7 @@ const myNodesList = computed(() => {
     return resultNodes;
 })
 const myNodesListCategories = computed(() => {
-    const categories: Record<string, GameNode[]> = {};
+    const categories: Record<string, GameNodeInfo[]> = {};
     myNodesList.value.forEach(node => {
         const category = node.category || "未分类";
         if (!categories[category]) {
@@ -138,6 +139,21 @@ const myNodesListCategories = computed(() => {
     return categories;
 })
 const selectedCategory = ref<string>("")
+
+
+const sendGameMessage = () => {
+    if (chatInput.value && chatInput.value.value.trim() !== "") {
+        socketClient.emit("req_send_game_chat", { content: chatInput.value.value.trim() });
+        chatInput.value.value = "";
+    } else {
+        popupNotify({
+            title: "我好像没听清",
+            message: "我似乎没听见你在输入栏输入的文本，好像你什么也没输入啊。",
+            duration: 2000,
+        })
+    }
+    autoResize();
+}
 
 // 下面响应玩家拖动调整面板宽度的逻辑
 const screenWidth = window.innerWidth
@@ -403,6 +419,13 @@ const closeModal = () => {
 .sender.character { color: #c8c8c8; }
 .sender.chat { color: #6f6f6f; }
 .time { opacity: 0.5; }
+
+.msg-content {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    margin-top: 5px;
+    color: var(--color-text, #fff);
+}
 
 .chat-input-area {
     display: flex;

@@ -1,5 +1,9 @@
-import { GameCharacter } from "../gameObjects/gameCharacter";
+import GameCharacter from "../gameObjects/gameCharacter";
 
 export class CharacterManager {
-    private characters: Map<string, GameCharacter> = new Map();
+    public characters: Map<string, GameCharacter> = new Map();
+
+    constructor() {
+        this.characters = new Map();
+    }
 }

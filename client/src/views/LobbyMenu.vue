@@ -64,10 +64,13 @@ import { router } from '../router'
 import { popupNotify } from '../services/popup'
 
 import { socketClient } from '../services/socket'
+import { useGameStore } from '../stores/game'
 
 const lobbyStore = useLobbyStore()
 const levels = computed(() => lobbyStore.lobbyInfo?.levels || [])
 const messages = computed(() => lobbyStore.chatMessages || [])
+
+const gameStore = useGameStore();
 
 const accountStore = useAccountStore()
 if (!accountStore.isLoginSuccess) {
@@ -101,6 +104,15 @@ const joinRoom = (levelID: string) => {
         duration: 5000,
     })
 }
+
+// 如果是通过前退退出游戏界面，发送 req_leave_room
+if (gameStore.gameLevelInfo) {
+    const levelID = gameStore.gameLevelInfo.levelID;
+    socketClient.emit('req_leave_room', { levelID: levelID })
+    gameStore.gameLevelInfo = null;
+    gameStore.contextMessages = [];
+}
+
 
 // 下方部分负责拖动调整左右面板宽度的逻辑
 const screenWidth = window.innerWidth
@@ -312,7 +324,6 @@ onUnmounted(() => {
     border-top: 1px solid var(--color-border, #3c3c3c);
     gap: 10px;
 }
-
 .chat-input-area textarea {
     flex: 1;
     background: transparent;
@@ -329,7 +340,6 @@ onUnmounted(() => {
     font-family: inherit;
     line-height: 1.5;
 }
-
 .chat-input-area textarea:focus {
     border-bottom-color: var(--color-primary, #4caf50);
 }

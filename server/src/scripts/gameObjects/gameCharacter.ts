@@ -31,3 +31,5 @@ export class GameCharacter {
         return this.attributes.get(attrName);
     }
 }
+
+export default GameCharacter;

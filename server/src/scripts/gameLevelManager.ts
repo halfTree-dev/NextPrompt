@@ -50,7 +50,7 @@ export class GameLevelManager {
         socketService.on('req_send_lobby_chat', (socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
-                socket.emit('evt_send_alert', { title: "谁在说话？", message: "抱歉啊这位朋友，你貌似没有登陆，按照这边的规定，我没法向服务器传达你的话语呢，尝试重新登陆试试？麻烦啦。" });
+                socket.emit('evt_send_alert', { title: "谁在说话？", message: "抱歉啊这位朋友，你貌似没有登陆，按照我的工作原则，我没法向服务器传达你的话语呢，尝试重新登陆试试？麻烦啦。" });
                 return;
             }
             this.updateNewChatMessage(account.userName, payload.content);
@@ -67,11 +67,32 @@ export class GameLevelManager {
                 socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，我们的转接服务表示你要去的那个游戏房间不存在了，我知道这听起来有些奇怪，但是为了避免你在这里迷路，请不要去那里了，选一些别的游戏房间试试吧，麻烦了！" });
                 return;
             }
+
+            let alreadyInRoom = false;
+            for (const [levelId, level] of this.levels) {
+                if (level.onlineAccounts.has(account.accountId)) {
+                    alreadyInRoom = true;
+                    break;
+                }
+            }
+            if (alreadyInRoom) {
+                socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，你貌似已经在另一个房间里了，或者您可能在其它设备/标签页上登录了。按照我的工作原则，你无法同时加入多场游戏，请先退出先前进入的房间再试！" });
+                return;
+            }
+
             socket.join(payload.levelID);
             logger.info(`用户 ${account.accountId} 加入了房间 ${payload.levelID}`);
             gameLevel.onlineAccounts.add(account.accountId);
+            if (gameLevel.hookManager.socketConnectEvent) {
+                const context = {
+                    level: gameLevel,
+                    logger: logger,
+                }
+                gameLevel.hookManager.socketConnectEvent(context, socket);
+            }
+            gameLevel.broadcastGameContext();
+            gameLevel.broadcastMessageContext();
             socket.emit('ack_join_room', { success: true, levelID: payload.levelID });
-            // TODO: 这里添加更多的进入处理逻辑
         });
 
         socketService.on('req_leave_room', (socket : Socket, payload) => {
@@ -86,8 +107,16 @@ export class GameLevelManager {
             socket.leave(payload.levelID);
             logger.info(`用户 ${account.accountId} 退出了房间 ${payload.levelID}`);
             gameLevel.onlineAccounts.delete(account.accountId);
+            if (gameLevel.hookManager.socketDisconnectEvent) {
+                const context = {
+                    level: gameLevel,
+                    logger: logger,
+                }
+                gameLevel.hookManager.socketDisconnectEvent(context, socket);
+            }
+            gameLevel.broadcastGameContext();
+            gameLevel.broadcastMessageContext();
             socket.emit('ack_leave_room', { success: true, levelID: payload.levelID });
-            // TODO: 这里添加更多的退出处理逻辑
         });
 
     }

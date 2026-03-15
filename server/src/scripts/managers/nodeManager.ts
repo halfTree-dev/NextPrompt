@@ -1,6 +1,12 @@
 import GameNode from "../gameObjects/gameNode";
+import GameNodeTemplate from "../gameObjects/gameNode";
 
 export class NodeManager {
-    private nodeTemplates: Record<string, GameNode> = {};
-    private nodes: Record<string, GameNode> = {};
+    public nodeTemplates: Map<string, GameNodeTemplate>;
+    public nodes: Map<string, GameNode>;
+
+    constructor() {
+        this.nodeTemplates = new Map();
+        this.nodes = new Map();
+    }
 }
