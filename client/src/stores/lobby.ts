@@ -23,3 +23,4 @@ export const useLobbyStore = defineStore('lobby', {
         chatMessages: [] as ChatMessage[]
     }),
 });
+

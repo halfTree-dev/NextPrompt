@@ -2,22 +2,24 @@ import mitt from "mitt";
 import { io, Socket } from "socket.io-client";
 
 import { type AccountRecordInfo } from "../stores/account";
+import type { ChatMessage, LobbyLevelInfo } from "../stores/lobby";
 
 type SocketEvents = {
     "ack_login_result": { success: boolean, message: string };
     "evt_account_info": { accountInfo: AccountRecordInfo };
-    "ack_room_list": any;
-    "ack_join_room": any;
-    "ack_leave_room": any;
+    "ack_room_list": { levels: LobbyLevelInfo[] };
+    "ack_join_room": { success: boolean, levelID: string };
+    "ack_leave_room": { success: boolean, levelID: string };
+    "ack_chat_history": ChatMessage[];
+    "evt_update_lobby_chat": ChatMessage;
     "ack_update_input": any;
     "ack_send_interact": any;
     "ack_send_end_turn_ready": any;
     "evt_send_game_context": any;
-    "evt_send_notify": any;
-    "evt_send_alert": any;
+    "evt_send_notify": { title: string, message: string, duration?: number };
+    "evt_send_alert": { title: string, message: string };
     "evt_send_effect": any;
     "ack_send_chat": any;
-    "evt_update_chat": any;
 };
 const bus = mitt<SocketEvents>();
 
@@ -44,6 +46,8 @@ class SocketClient {
         this.socket.on("ack_room_list", (payload) => bus.emit("ack_room_list", payload));
         this.socket.on("ack_join_room", (payload) => bus.emit("ack_join_room", payload));
         this.socket.on("ack_leave_room", (payload) => bus.emit("ack_leave_room", payload));
+        this.socket.on("ack_chat_history", (payload) => bus.emit("ack_chat_history", payload));
+        this.socket.on("evt_update_lobby_chat", (payload) => bus.emit("evt_update_lobby_chat", payload));
         this.socket.on("ack_update_input", (payload) => bus.emit("ack_update_input", payload));
         this.socket.on("ack_send_interact", (payload) => bus.emit("ack_send_interact", payload));
         this.socket.on("ack_send_end_turn_ready", (payload) => bus.emit("ack_send_end_turn_ready", payload));
@@ -52,7 +56,6 @@ class SocketClient {
         this.socket.on("evt_send_alert", (payload) => bus.emit("evt_send_alert", payload));
         this.socket.on("evt_send_effect", (payload) => bus.emit("evt_send_effect", payload));
         this.socket.on("ack_send_chat", (payload) => bus.emit("ack_send_chat", payload));
-        this.socket.on("evt_update_chat", (payload) => bus.emit("evt_update_chat", payload));
     }
 
     public emit(event: string, payload: any) {

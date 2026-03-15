@@ -5,6 +5,7 @@
             <h2 class="lobby-title">故事大厅</h2>
             <div class="header-right">
                 <button class="settings-btn">设置</button>
+                <button class="refresh-btn">刷新</button>
             </div>
         </header>
 
@@ -12,7 +13,7 @@
             <!--接下来是房间列表显示，占用下方区域的左边部分-->
             <section class="lobby-room-list" :style="{ width: leftPanelWidth + 'px' }">
                 <ul class="room-list">
-                    <li class="room-item" v-for="value in levels" :key="value.levelID">
+                    <li class="room-item" v-for="value in levels" :key="value.levelID" @click="joinRoom(value.levelID)">
                         <div class="room-info">
                             <h4>{{ value.levelName }}</h4>
                             <p>{{ value.levelID }}</p>
@@ -46,7 +47,7 @@
                         @input="autoResize"
                         ref="chatInput"
                     ></textarea>
-                    <button class="send-btn">发送到大厅</button>
+                    <button class="send-btn" @click="sendChatMessage">发送到大厅</button>
                 </div>
             </section>
         </main>
@@ -62,6 +63,8 @@ import { useAccountStore } from '../stores/account'
 import { router } from '../router'
 import { popupNotify } from '../services/popup'
 
+import { socketClient } from '../services/socket'
+
 const lobbyStore = useLobbyStore()
 const levels = computed(() => lobbyStore.lobbyInfo?.levels || [])
 const messages = computed(() => lobbyStore.chatMessages || [])
@@ -74,8 +77,30 @@ if (!accountStore.isLoginSuccess) {
         duration: 3000,
     })
     router.push("/")
+} else {
+    socketClient.emit('req_room_list', {})
+    socketClient.emit('req_chat_history', {})
 }
 
+const sendChatMessage = () => {
+    if (!chatInput.value) return;
+    const content = chatInput.value.value.trim();
+    if (content.length === 0) return;
+
+    socketClient.emit('req_send_lobby_chat', { content });
+
+    chatInput.value.value = '';
+    autoResize();
+}
+
+const joinRoom = (levelID: string) => {
+    socketClient.emit('req_join_room', { levelID })
+    popupNotify({
+        title: "正在加入游戏",
+        message: `我们正在联络 ${levelID} 房间的路由，只要她确认了你的身份，就能让你加入游戏房间了！`,
+        duration: 5000,
+    })
+}
 
 // 下方部分负责拖动调整左右面板宽度的逻辑
 const screenWidth = window.innerWidth
@@ -148,7 +173,7 @@ onUnmounted(() => {
     color: var(--color-primary, #4caf50);
 }
 
-.settings-btn {
+.settings-btn, .refresh-btn {
     background: transparent;
     color: var(--color-text, #fff);
     border: 1px solid var(--color-border, #555);
@@ -158,7 +183,7 @@ onUnmounted(() => {
     transition: all 0.2s;
 }
 
-.settings-btn:hover {
+.settings-btn:hover, .refresh-btn:hover {
     background: var(--color-border, #555);
 }
 
@@ -264,7 +289,8 @@ onUnmounted(() => {
 .time { opacity: 0.5; }
 
 .msg-content {
-    /* 移除之前的独立圆角气泡样式，和 GamePage 统一为一个纯粹的内容区域 */
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
     margin-top: 5px;
     color: var(--color-text, #fff);
 }

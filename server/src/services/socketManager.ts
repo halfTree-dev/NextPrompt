@@ -30,16 +30,24 @@ class SocketService extends EventEmitter {
                 this.emit("req_user_login", socket, payload.userName, payload.password);
             });
 
-            socket.on("req_room_list", (payload: any) => {
+            socket.on("req_room_list", (payload: {}) => {
                 this.emit("req_room_list", socket, payload);
             });
 
-            socket.on("req_join_room", (payload: any) => {
+            socket.on("req_join_room", (payload: { levelID: string }) => {
                 this.emit("req_join_room", socket, payload);
             });
 
-            socket.on("req_leave_room", (payload: any) => {
+            socket.on("req_leave_room", (payload: { levelID: string }) => {
                 this.emit("req_leave_room", socket, payload);
+            });
+
+            socket.on("req_send_lobby_chat", (payload: { content: string }) => {
+                this.emit("req_send_lobby_chat", socket, payload);
+            });
+
+            socket.on("req_chat_history", (payload: {}) => {
+                this.emit("req_chat_history", socket, payload);
             });
 
             socket.on("req_update_input", (payload: any) => {
@@ -52,10 +60,6 @@ class SocketService extends EventEmitter {
 
             socket.on("req_send_end_turn_ready", (payload: any) => {
                 this.emit("req_send_end_turn_ready", socket, payload);
-            });
-
-            socket.on("req_send_chat", (payload: any) => {
-                this.emit("req_send_chat", socket, payload);
             });
 
             socket.on("disconnect", () => {

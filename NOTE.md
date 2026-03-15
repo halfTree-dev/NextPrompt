@@ -5,8 +5,8 @@
 - 后端到前端：ack_login_result, evt_account_info
 
 ## LevelManager
-- 前端到后端：req_room_list, req_join_room, req_leave_room
-- 后端到前端：ack_room_list, ack_join_room, ack_leave_room
+- 前端到后端：req_room_list, req_join_room, req_leave_room, req_send_lobby_chat, req_chat_history
+- 后端到前端：ack_room_list, ack_join_room, ack_leave_room, evt_update_lobby_chat, ack_chat_history
 
 ## Level
 - 前端到后端：req_update_input, req_send_interact, req_send_end_turn_ready
@@ -17,11 +17,7 @@
 ## Manage Notify
 - 后端到前端：evt_send_notify, evt_send_alert, evt_send_effect
 
-## Manage Chat
-- 前端到后端：req_send_chat
-- 后端到前端：ack_send_chat,
-
-- 后端到前端：evt_update_chat
+### Manage Chat
 
 - 以 req 前缀的消息表示路由是客户端请求
 - 以 ack 前缀的消息表示路由是服务器对客户端请求的响应

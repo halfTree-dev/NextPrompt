@@ -37,7 +37,7 @@ onMounted(() => {
     padding: 15px 20px;
     border-radius: 0px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    width: 20vw;
+    width: 30vw;
     pointer-events: auto;
     display: flex;
     flex-direction: column;

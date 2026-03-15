@@ -2,15 +2,17 @@ import { Socket } from "socket.io";
 import crypto from "crypto";
 
 import { AccountRecord } from "./dataManger";
+import { EventEmitter } from "events";
 
 import socketService from "./socketManager";
 import dataManager from "./dataManger";
 import logger from "../utils/logger";
 
-class AccountManager {
+class AccountManager extends EventEmitter {
     onlineAccounts: Map<string, AccountRecord>;
 
     constructor() {
+        super();
         this.onlineAccounts = new Map();
     }
 
@@ -114,7 +116,7 @@ class AccountManager {
 
         this.onlineAccounts.delete(socket.id);
         logger.info(`用户已下线，socket=${socket.id}, accountId=${account.accountId}`);
-
+        this.emit("user_disconnected", account);
     }
 }
 

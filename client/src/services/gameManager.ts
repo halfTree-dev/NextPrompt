@@ -1,4 +1,5 @@
-import { useGameStore, type GameLevelInfo, type ContextMessage } from "../stores/game";
+import { useGameStore, type GameLevelInfo } from "../stores/game";
+import { popupAlert, popupNotify } from "./popup";
 import { bus } from "./socket";
 
 class GameManager {
@@ -23,22 +24,31 @@ class GameManager {
         });
 
         bus.on("evt_send_notify", (payload: any) => {
-            console.log("收到游戏通知:", payload);
+            if (payload && payload.title && payload.message && payload.duration) {
+                popupNotify({
+                    title: payload.title,
+                    message: payload.message,
+                    duration: payload.duration
+                });
+            } else if (payload && payload.title && payload.message) {
+                popupNotify({
+                    title: payload.title,
+                    message: payload.message
+                });
+            }
         });
 
         bus.on("evt_send_alert", (payload: any) => {
-            console.warn("收到游戏警告:", payload);
+            if (payload && payload.title && payload.message) {
+                popupAlert({
+                    title: payload.title,
+                    message: payload.message
+                });
+            }
         });
 
         bus.on("evt_send_effect", (payload: any) => {
             console.log("收到游戏效果:", payload);
-        });
-
-        bus.on("evt_update_chat", (payload: any) => {
-            const gameStore = useGameStore();
-            if (payload && payload.sendType) {
-                gameStore.contextMessages.push(payload as ContextMessage);
-            }
         });
     }
 }
