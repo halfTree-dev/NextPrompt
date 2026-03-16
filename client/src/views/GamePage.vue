@@ -35,9 +35,25 @@
                 <div class="game-nodes-content">
                     <ul class="node-list">
                         <!-- 节点被点击时一定会触发一个互动窗口，显示进一步的详细信息 -->
-                        <li class="node-item" v-for="node in myNodesList.filter(node => node.category === selectedCategory)" :key="node.nodeID" @click="openNodeDetails(node.nodeID)">
-                            <h4>{{ node.displayText }}</h4>
-                            <p>{{ node.description }}</p>
+                        <li class="node-item" v-for="node in myNodesList.filter(node => selectedCategory === CATEGORY_ALL || node.category === selectedCategory)" :key="node.nodeID" @click="openNodeDetails(node.nodeID)">
+                            <div class="node-card-header">
+                                <h4 class="node-title" :class="{ interactable: node.interactable === true }">{{ node.displayText }}</h4>
+                                <div
+                                    class="node-status-top"
+                                    v-if="typeof node.lifeTimeRounds === 'number' || typeof node.coolDownRounds === 'number'"
+                                >
+                                    <span class="node-state life" v-if="typeof node.lifeTimeRounds === 'number'">
+                                        佚亡于 {{ node.lifeTimeRounds }} 回合
+                                    </span>
+                                    <span class="node-state cooldown" v-if="typeof node.coolDownRounds === 'number'">
+                                        冷却 {{ node.coolDownRounds }} 回合
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="node-description">{{ node.description }}</p>
+                            <div class="node-count-badge" v-if="node.inStackable === false && typeof node.count === 'number'">
+                                {{ node.count }}
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -111,34 +127,33 @@ const myAccount = computed(() => accountStore.accountInfo)
 
 const myCharacter = computed(() => {
     if (!level.value || !myAccount.value || !level.value.characters) return null
-    return level.value.characters.get(myAccount.value.accountId) || null
+    return level.value.characters[myAccount.value.accountId] || null
 })
 const myAttributesList = computed(() => {
     if (!myCharacter.value) return []
     return Array.from(myCharacter.value.attributes.entries()).map(([name, value]) => ({ name, value }))
 })
-const myNodesList = computed(() => {
-    if (!myCharacter.value || !level.value || !level.value.nodes) return []
-    const resultNodes : Array<GameNodeInfo> = [];
-    level.value.nodes.forEach(node => {
-        if (node.relatedCharacters.some(rc => rc.characterID === myCharacter.value?.characterID)) {
-            resultNodes.push(node);
-        }
-    });
-    return resultNodes;
-})
+
+const myNodesList = computed(() => gameStore.gameLevelInfo && gameStore.gameLevelInfo.nodes ? Object.values(gameStore.gameLevelInfo.nodes) : [])
+
+const CATEGORY_ALL = "全部";
 const myNodesListCategories = computed(() => {
     const categories: Record<string, GameNodeInfo[]> = {};
+    categories[CATEGORY_ALL] = [];
     myNodesList.value.forEach(node => {
-        const category = node.category || "未分类";
+        const category = node.category;
+        if (!category) { return; }
         if (!categories[category]) {
             categories[category] = [];
         }
         categories[category].push(node);
+        if (categories[CATEGORY_ALL]) {
+            categories[CATEGORY_ALL].push(node);
+        }
     });
     return categories;
 })
-const selectedCategory = ref<string>("")
+const selectedCategory = ref<string>(CATEGORY_ALL)
 
 
 const sendGameMessage = () => {
@@ -185,9 +200,9 @@ const startRightResize = () => {
 }
 const resize = (e: MouseEvent) => {
     if (isResizingLeft) {
-        leftNavWidth.value = Math.max(150, Math.min(e.clientX, 400))
+        leftNavWidth.value = Math.max(screenWidth / 12, Math.min(screenWidth / 5, leftNavWidth.value + e.movementX));
     } else if (isResizingRight) {
-        rightChatWidth.value = Math.max(200, Math.min(window.innerWidth - e.clientX, 600))
+        rightChatWidth.value = Math.max(screenWidth / 4.5, Math.min(screenWidth / 2, rightChatWidth.value - e.movementX));
     }
 }
 const stopResize = () => {
@@ -371,17 +386,89 @@ const closeModal = () => {
     background: var(--color-panel, rgba(45, 45, 45, 0.8));
     border: 1px solid var(--color-border, #3c3c3c);
     border-radius: 0;
-    padding: 16px;
+    padding: 14px 16px 36px;
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
+    position: relative;
 }
 .node-item:hover {
     transform: translateY(-2px);
     background: rgba(60, 60, 60, 0.9);
 }
 
-.node-item h4 { margin: 0 0 10px 0; color: var(--color-primary, #4caf50); }
-.node-item p { margin: 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.4; }
+.node-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.node-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text, #eee);
+    line-height: 1.25;
+}
+
+.node-title.interactable {
+    background: linear-gradient(90deg, var(--color-emphasis, #f39c12) 0%, var(--color-emphasis2, #f38612) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.node-status-top {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.node-state {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.node-state.life {
+    color: var(--color-text, #111);
+    border-color: var(--color-emphasis, #f39c12);
+    background: rgba(var(--color-emphasis, #f39c12), 0.12);
+}
+
+.node-state.cooldown {
+    color: var(--color-text, #111);
+    border-color: var(--color-emphasis2, #f38612);
+    background: rgba(var(--color-emphasis2, #f38612), 0.12);
+}
+
+.node-description {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.86;
+    line-height: 1.4;
+    padding-right: 70px;
+}
+
+.node-count-badge {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    min-width: 42px;
+    text-align: center;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text, #111);
+    background: var(--color-background, #eee);
+    border: 1px solid var(--color-border, #eee);
+}
 
 .game-chat {
     display: flex;
@@ -415,9 +502,9 @@ const closeModal = () => {
 }
 
 .sender { font-weight: bold; color: #fff; }
-.sender.system { color: #ff9800; }
-.sender.character { color: #c8c8c8; }
-.sender.chat { color: #6f6f6f; }
+.sender.system { color: linear-gradient(90deg, var(--color-emphasis, #f39c12) 0%, var(--color-emphasis2, #f38612) 100%); }
+.sender.character { color: var(--color-text, #f4f4f4); }
+.sender.chat { color: #656565; }
 .time { opacity: 0.5; }
 
 .msg-content {

@@ -1,5 +1,5 @@
 <template>
-    <div>正在返回首页...</div>
+    <div>YOU SHALL NOT PASS!</div>
 </template>
 
 <script setup lang="ts">

@@ -77,8 +77,8 @@ export class GameLevel {
                 inStackable: node.inStackable,
                 count: node.count,
                 tags: node.tags,
-                inputSlots: node.inputSlots,
-                inputStringBars: node.inputStringBars,
+                inputSlots: node.inputSlots ? Object.fromEntries(node.inputSlots.entries()) : undefined,
+                inputStringBars: node.inputStringBars ? Object.fromEntries(node.inputStringBars.entries()) : undefined,
                 interactable: node.interactable,
             };
         }
@@ -94,6 +94,13 @@ export class GameLevel {
             };
         }
 
+        const nodeInfos = Object.fromEntries(
+            Array.from(this.nodeManager.nodes.entries()).map(([key, node]) => [key, turnNodeIntoInfo(node)])
+        );
+        const characterInfos = Object.fromEntries(
+            Array.from(this.characterManager.characters.entries()).map(([key, character]) => [key, turnCharacterIntoInfo(character)])
+        );
+
         const result : GameLevelInfo = {
             levelID: this.levelID,
             levelName: this.levelName,
@@ -102,8 +109,8 @@ export class GameLevel {
                 const account = dataManager.getAccount(accountId);
                 return account ? account.userName : "";
             }),
-            nodes: new Map(Array.from(this.nodeManager.nodes.entries()).map(([key, node]) => [key, turnNodeIntoInfo(node)])),
-            characters: new Map(Array.from(this.characterManager.characters.entries()).map(([key, character]) => [key, turnCharacterIntoInfo(character)])),
+            nodes: nodeInfos,
+            characters: characterInfos,
         };
 
         const sockets = socketService.getSocketsInRoom(this.levelID);
@@ -113,8 +120,8 @@ export class GameLevel {
             if (characterForAccount) {
                 // 特别地，对于正在操控角色的玩家而言，他只能看见自己的节点
                 const filteredResult = cloneDeep(result);
-                filteredResult.nodes = new Map(Array.from(result.nodes.entries()).filter(([_, node]) => {
-                    return node.relatedCharacters.some(rc => rc.characterID === characterForAccount.characterID);
+                filteredResult.nodes = Object.fromEntries(Object.entries(result.nodes).filter(([nodeID, nodeInfo]) => {
+                    return nodeInfo.relatedCharacters.some(rc => rc.characterID === characterForAccount.characterID);
                 }));
                 socket.emit('evt_send_game_context', filteredResult);
             } else {
@@ -146,6 +153,28 @@ export class GameLevel {
         }
     }
 
+    goNextRound() {
+        this.currRound += 1;
+        for (const node of this.nodeManager.nodes.values()) {
+            if (node.lifeTimeRounds && node.lifeTimeRounds > 0) {
+                node.lifeTimeRounds -= 1;
+            }
+            if (node.coolDownRounds && node.coolDownRounds > 0) {
+                node.coolDownRounds -= 1;
+            }
+            if (node.onAdvanceCallback) {
+                const context = {
+                    level: this,
+                    logger: logger,
+                    node: node,
+                }
+                node.onAdvanceCallback(context);
+            }
+        }
+        this.hookManager.storyAdvanceEvent?.({ level: this, logger: logger });
+        this.broadcastGameContext();
+    }
+
 }
 
 export default GameLevel;
@@ -161,7 +190,7 @@ interface AccountRecordInfo {
 interface GameCharacterInfo {
     characterID: string;
 
-    attributes: Map<string, Attributes>;
+    attributes: { [key: string]: Attributes };
     storage?: Record<string, any>;
 
     accountRecord?: AccountRecordInfo;
@@ -191,8 +220,8 @@ interface GameNodeInfo {
 
     tags?: NodeTag[];
 
-    inputSlots?: Map<string, InputSlot>;
-    inputStringBars?: Map<string, InputStringBar>;
+    inputSlots?: { [key: string]: InputSlot };
+    inputStringBars?: { [key: string]: InputStringBar };
 
     interactable?: boolean;
 }
@@ -202,6 +231,6 @@ interface GameLevelInfo {
     levelName: string;
     currRound: number;
     onlineAccountNames: string[];
-    nodes: Map<string, GameNodeInfo>;
-    characters: Map<string, GameCharacterInfo>;
+    nodes: { [key: string]: GameNodeInfo };
+    characters: { [key: string]: GameCharacterInfo };
 }

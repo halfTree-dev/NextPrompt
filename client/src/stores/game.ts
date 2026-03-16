@@ -44,8 +44,8 @@ export interface GameNodeInfo {
 
     tags?: Tag[];
 
-    inputSlots?: Map<string, InputSlot>;
-    inputStringBars?: Map<string, InputStringBar>;
+    inputSlots?: { [key: string]: InputSlot };
+    inputStringBars?: { [key: string]: InputStringBar };
 
     interactable?: boolean;
 }
@@ -73,8 +73,8 @@ export interface GameLevelInfo {
     levelName: string;
     currRound: number;
     onlineAccountNames: string[];
-    nodes: Map<string, GameNodeInfo>;
-    characters: Map<string, GameCharacterInfo>;
+    nodes: { [key: string]: GameNodeInfo };
+    characters: { [key: string]: GameCharacterInfo };
 }
 
 export interface ContextMessage {

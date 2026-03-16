@@ -18,10 +18,10 @@ export class StoryLoader {
 
         const sharedData: Record<string, any> = {};
         const levelContext = vm.createContext({
-            story: gameLevel,
+            level: gameLevel,
             logger: logger,
-            console: console,
             data: sharedData,
+            console: console,
             Math: Math,
             Date: Date,
             JSON: JSON,

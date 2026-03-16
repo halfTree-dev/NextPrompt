@@ -9,6 +9,7 @@ class GameManager {
         bus.on("evt_send_game_context", (payload: any) => {
             const gameStore = useGameStore();
             gameStore.gameLevelInfo = payload as GameLevelInfo;
+            console.log("游戏上下文已更新", gameStore.gameLevelInfo);
         });
 
         bus.on("ack_update_input", (payload: any) => {
@@ -26,8 +27,6 @@ class GameManager {
 
         bus.on("evt_send_game_context", (payload: GameLevelInfo) => {
             const gameStore = useGameStore();
-            payload.nodes = new Map(Object.entries(payload.nodes || {}))
-            payload.characters = new Map(Object.entries(payload.characters || {}))
             gameStore.gameLevelInfo = payload;
         });
 

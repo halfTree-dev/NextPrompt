@@ -27,6 +27,7 @@ export class GameLevelManager {
                 storyLoader.loadStoryScript(scriptPath, newLevel);
             }
             newLevel.init();
+            newLevel.hookManager.storyInitEvent?.({ level: newLevel, logger: logger });
             this.levels.set(config.levelID, newLevel);
         }
 

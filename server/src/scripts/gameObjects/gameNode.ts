@@ -1,4 +1,6 @@
 import { cloneDeep } from 'lodash';
+import { GameLevel } from '../gameLevel';
+import logger from '../../utils/logger';
 
 export interface RelatedCharacter {
     characterID: string;
@@ -26,6 +28,9 @@ export interface InteractCallbackContext {
 }
 
 export interface AdvanceCallbackContext {
+    level: GameLevel;
+    logger: typeof logger;
+    node: GameNode;
 }
 
 export class GameNode {
@@ -85,13 +90,15 @@ export class GameNodeTemplate {
     onAdvanceCallback?: ((context: AdvanceCallbackContext) => void | Promise<void>) | null = null;
 }
 
-function createGameNodeFromTemplate(template: GameNodeTemplate, nodeID: string): GameNode {
+export function createGameNodeFromTemplate(template: GameNodeTemplate, nodeID: string): GameNode {
     const node = new GameNode();
     const templateData = cloneDeep(template);
 
     node.nodeID = nodeID;
     node.displayText = templateData.displayText;
     node.description = templateData.description;
+    node.category = templateData.category;
+    node.storage = {};
     node.invisible = templateData.invisible;
     node.lifeTimeRounds = templateData.lifeTimeRounds;
     node.coolDownRounds = templateData.coolDownRounds;
