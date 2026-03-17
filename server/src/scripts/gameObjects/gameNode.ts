@@ -13,12 +13,14 @@ export interface Tag {
 }
 
 export interface InputSlot {
+    slotID: string;
     inputHint: string;
     inputID: string;
     [key: string]: any;
 }
 
 export interface InputStringBar {
+    barID: string;
     inputHint: string;
     inputContent: string;
     [key: string]: any;

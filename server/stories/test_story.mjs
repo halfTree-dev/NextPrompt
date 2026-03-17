@@ -12,8 +12,24 @@ level.hookManager.storyInitEvent = (context) => {
         lifeTimeRounds: 3,
         coolDownRounds: 2,
         inStackable: true,
-        interactable: true
+        interactable: true,
+
+        inputSlots: new Map(Object.entries({
+            "bullet": {
+                slotID: "bullet",
+                inputHint: "The Bullet for firing the revolver",
+                inputID: ""
+            },
+        })),
+        inputStringBars: new Map(Object.entries({
+            "strategy": {
+                barID: "strategy",
+                inputHint: "The strategy for firing.",
+                inputContent: ""
+            }
+        }))
     })
+
     level.nodeManager.addNodeTemplate({
         templateName: "bullet",
         displayText: "Bullet",
