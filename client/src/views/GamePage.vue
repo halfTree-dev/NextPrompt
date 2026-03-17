@@ -53,12 +53,10 @@
             </section>
         </main>
 
-        <!-- 这里是示例弹窗 -->
         <transition name="modal-fade">
             <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
                 <div class="modal-content">
                     <NodeInteract v-if="activeNode" :node="activeNode" />
-                    <button class="close-btn" @click="closeModal">关闭</button>
                 </div>
             </div>
         </transition>
@@ -171,7 +169,6 @@ const activeNode = ref<GameNodeInfo | null>(null);
 const openNodeDetails = (node: GameNodeInfo) => {
     activeNodeId.value = node.nodeID;
     activeNode.value = node;
-
     showModal.value = true;
 }
 
@@ -390,8 +387,10 @@ const closeModal = () => {
     border: 1px solid var(--color-border, #555);
     border-radius: 0;
     padding: 30px;
-    width: 75vw;
-    height: 75vh;
+    min-width: 45vw;
+    max-width: 70vw;
+    min-height: 35vh;
+    max-height: 75vh;
     color: var(--color-text, #fff);
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     display: flex;

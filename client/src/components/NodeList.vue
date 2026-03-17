@@ -41,6 +41,8 @@ import { useGameStore, type GameNodeInfo } from '../stores/game';
 
 const gameStore = useGameStore();
 
+defineEmits(['node-click']);
+
 const myNodesList = computed(() => gameStore.gameLevelInfo && gameStore.gameLevelInfo.nodes ? Object.values(gameStore.gameLevelInfo.nodes) : [])
 const CATEGORY_ALL = "全部";
 const myNodesListCategories = computed(() => {
@@ -60,7 +62,6 @@ const myNodesListCategories = computed(() => {
     return categories;
 })
 const selectedCategory = ref<string>(CATEGORY_ALL)
-
 </script>
 
 <style lang="css" scoped>
