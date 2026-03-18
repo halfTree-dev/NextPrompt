@@ -13,6 +13,7 @@ export interface AccountRecordInfo {
 export const useAccountStore = defineStore('account', {
     state: () => ({
         isLoginSuccess: false,
-        accountInfo: null as AccountRecordInfo | null
+        accountInfo: null as AccountRecordInfo | null,
+        operationLock: false,
     })
 });

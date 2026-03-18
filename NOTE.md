@@ -9,9 +9,8 @@
 - 后端到前端：ack_room_list, ack_join_room, ack_leave_room, evt_update_lobby_chat, ack_chat_history
 
 ## Level
-- 前端到后端：req_update_input, req_send_interact, req_send_end_turn_ready
-- 后端到前端：ack_update_input, ack_send_interact, ack_send_end_turn_ready,
-
+- 前端到后端：req_update_input, req_send_interact,
+- 后端到前端：ack_update_input, ack_send_interact,
 > update_input 同时传输节点选择和文本输入
 
 - 后端到前端：evt_send_game_context
@@ -22,6 +21,12 @@
 ## Manage Notify
 - 后端到前端：evt_send_notify, evt_send_alert, evt_send_effect
 
+## Manage EndTurn
+- 前端到后端：req_end_turn
+- 后端到前端：ack_end_turn, evt_end_turn_result
+
+## Manage Cancel Op Lock
+- 后端到前端：*evt_cancel_op_lock*
 
 
 - 以 req 前缀的消息表示路由是客户端请求

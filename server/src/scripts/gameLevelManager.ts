@@ -83,7 +83,7 @@ export class GameLevelManager {
 
             socket.join(payload.levelID);
             logger.info(`用户 ${account.accountId} 加入了房间 ${payload.levelID}`);
-            gameLevel.onlineAccounts.add(account.accountId);
+            gameLevel.addOnlineAccount(account.accountId);
             if (gameLevel.hookManager.socketConnectEvent) {
                 const context = {
                     level: gameLevel,
@@ -107,7 +107,7 @@ export class GameLevelManager {
             }
             socket.leave(payload.levelID);
             logger.info(`用户 ${account.accountId} 退出了房间 ${payload.levelID}`);
-            gameLevel.onlineAccounts.delete(account.accountId);
+            gameLevel.delOnlineAccount(account.accountId);
             if (gameLevel.hookManager.socketDisconnectEvent) {
                 const context = {
                     level: gameLevel,

@@ -26,6 +26,7 @@ export class GameLevel {
     textManager: TextManager;
 
     onlineAccounts: Set<string>;
+    onlineAccountsReadyForEndTurn: Map<string, boolean>;
 
     constructor(levelID: string, levelName: string = "") {
         this.levelID = levelID;
@@ -39,12 +40,13 @@ export class GameLevel {
         this.textManager = new TextManager();
 
         this.onlineAccounts = new Set();
+        this.onlineAccountsReadyForEndTurn = new Map();
     }
 
     init() {
         accountManager.on("user_disconnected", (account : AccountRecord) => {
             if (this.onlineAccounts.has(account.accountId)) {
-                this.onlineAccounts.delete(account.accountId);
+                this.delOnlineAccount(account.accountId);
                 logger.info(`玩家 ${account.userName} 已从关卡 ${this.levelID} 下线`);
             }
         });
@@ -177,6 +179,16 @@ export class GameLevel {
         });
     }
 
+    addOnlineAccount(accountId: string) {
+        this.onlineAccounts.add(accountId);
+        this.onlineAccountsReadyForEndTurn.set(accountId, false);
+    }
+
+    delOnlineAccount(accountId: string) {
+        this.onlineAccounts.delete(accountId);
+        this.onlineAccountsReadyForEndTurn.delete(accountId);
+    }
+
     getSocketFromAccount(accountId: string) {
         const sockets = socketService.getSocketsInRoom(this.levelID);
         return sockets.find(socket => {
@@ -210,11 +222,11 @@ export class GameLevel {
         function turnCharacterIntoInfo(character : any) : GameCharacterInfo {
             return {
                 characterID: character.characterID,
+                characterName: character.characterName,
+                characterDescription: character.characterDescription,
                 attributes: character.attributes,
                 storage: character.storage,
                 accountRecord: character.accountRecord,
-                operationLock: character.operationLock,
-                readyForEndTurn: character.readyForEndTurn,
             };
         }
 
@@ -314,13 +326,13 @@ interface AccountRecordInfo {
 interface GameCharacterInfo {
     characterID: string;
 
+    characterName: string;
+    characterDescription: string;
+
     attributes: { [key: string]: Attributes };
     storage?: Record<string, any>;
 
     accountRecord?: AccountRecordInfo;
-
-    operationLock: boolean;
-    readyForEndTurn: boolean;
 }
 
 interface GameNodeInfo {

@@ -37,8 +37,8 @@
 			<ul class="node-list">
 				<li class="node-list-item" v-for="inputBar in nodeInputStringBars" :key="inputBar.barID">
 					<span class="item-title">{{ inputBar.inputHint }}</span>
-					<input type="text" v-model="inputBar.content" class="input-string-bar" placeholder="输入内容..." readonly />
-					<button class="btn-secondary" @click="() => { currentEditingStringBarID = inputBar.barID; currentEditingStringBarContent = inputBar.content; showInputStringBarEdit = true; }">编辑</button>
+					<input type="text" v-model="inputBar.inputContent" class="input-string-bar" placeholder="输入内容..." readonly />
+					<button class="btn-secondary" @click="() => { currentEditingStringBarID = inputBar.barID; currentEditingStringBarContent = inputBar.inputContent; showInputStringBarEdit = true; }">编辑</button>
 				</li>
 			</ul>
 		</div>
@@ -127,6 +127,7 @@ const handleEditInputStringBar = (inputContent: string) => {
 			targetBar.inputContent = inputContent;
 		}
 		sendReqUpdateInput();
+		console.log(nodeInStore.value.inputStringBars);
 	}
 	showInputStringBarEdit.value = false;
 	currentEditingStringBarID.value = "";

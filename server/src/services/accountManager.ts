@@ -10,10 +10,12 @@ import logger from "../utils/logger";
 
 class AccountManager extends EventEmitter {
     onlineAccounts: Map<string, AccountRecord>;
+    onlineAccountsOperationLocks: Map<string, boolean>;
 
     constructor() {
         super();
         this.onlineAccounts = new Map();
+        this.onlineAccountsOperationLocks = new Map();
     }
 
     public init() {
@@ -76,6 +78,7 @@ class AccountManager extends EventEmitter {
         }
 
         this.onlineAccounts.set(socket.id, account);
+        this.onlineAccountsOperationLocks.set(socket.id, false);
         logger.info(`用户 ${userName} 已上线，socket=${socket.id}, accountId=${account.accountId}`);
         socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: true, message: "注册并登陆成功！" });
         socketService.emitMessageToSocket(socket.id, "evt_account_info", { accountInfo: this.getAccountInfoForClient(account) });
@@ -105,6 +108,7 @@ class AccountManager extends EventEmitter {
         }
 
         this.onlineAccounts.set(socket.id, account);
+        this.onlineAccountsOperationLocks.set(socket.id, false);
         logger.info(`用户登录成功，socket=${socket.id}, accountId=${account.accountId}`);
         socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: true, message: "登陆成功" });
         socketService.emitMessageToSocket(socket.id, "evt_account_info", { accountInfo: this.getAccountInfoForClient(account) });
@@ -120,6 +124,7 @@ class AccountManager extends EventEmitter {
         }
 
         this.onlineAccounts.delete(socket.id);
+        this.onlineAccountsOperationLocks.delete(socket.id);
         logger.info(`用户已下线，socket=${socket.id}, accountId=${account.accountId}`);
         this.emit("user_disconnected", account);
     }

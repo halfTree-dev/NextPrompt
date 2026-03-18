@@ -12,13 +12,21 @@
         <main class="game-main">
             <!-- 玩家的属性显示区域，占用下方左边部分 -->
             <section class="game-attributes" :style="{ width: leftNavWidth + 'px' }">
-                <div class="panel-header">你的属性</div>
+                <div class="panel-header">属性</div>
                 <ul class="attr-list">
                     <li class="attr-item" v-for="attribute in myAttributesList">
                         <span class="attr-name">{{ attribute.name }}</span>
                         <span class="attr-value">{{ attribute.value }}</span>
                     </li>
                 </ul>
+                <div class="panel-header">你扮演的角色</div>
+                <div class="character-profile">
+                    <span class="character-name">{{ myCharacter ? myCharacter.characterName : "观察者" }}</span>
+                    <p class="character-description">{{ myCharacter ? myCharacter.characterDescription : "你是当前故事的一名读者。" }}</p>
+                </div>
+                <div class="end-turn-area">
+                    <button class="end-turn-btn">准备结束回合</button>
+                </div>
             </section>
 
             <div class="resizer" @mousedown="startLeftResize"></div>
@@ -239,6 +247,57 @@ const closeModal = () => {
     color: #888;
     background: var(--color-panel, rgba(45, 45, 45, 0.5));
     border-bottom: 1px solid var(--color-border, #3c3c3c);
+}
+
+.character-profile {
+    margin-top: auto;
+    padding: 18px 15px 10px 15px;
+    background: var(--color-panel, rgba(45, 45, 45, 0.4));
+    border-top: 1px solid var(--color-border, #3c3c3c);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+.character-name {
+    color: var(--color-primary, #4caf50);
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.character-description {
+    color: var(--color-text, #eee);
+    font-size: 1rem;
+    word-break: break-all;
+    white-space: pre-line;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.end-turn-area {
+    margin-top: auto;
+    padding: 18px 15px 10px 15px;
+    background: var(--color-background, rgba(45, 45, 45, 0.5));
+    border-top: 1px solid var(--color-border, #3c3c3c);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+.end-turn-btn {
+    background: var(--color-primary, #4caf50);
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 0 18px;
+    border-radius: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 36px;
+    transition: filter 0.2s;
 }
 
 .game-attributes {

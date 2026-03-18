@@ -61,13 +61,13 @@ export interface Attributes {
 export interface GameCharacterInfo {
     characterID: string;
 
+    characterName: string;
+    characterDescription: string;
+
     attributes: Map<string, Attributes>;
     storage?: Record<string, any>;
 
     accountRecord?: AccountRecordInfo;
-
-    operationLock: boolean;
-    readyForEndTurn: boolean;
 }
 
 export interface GameLevelInfo {
@@ -90,6 +90,7 @@ export interface ContextMessage {
 export const useGameStore = defineStore('game', {
     state: () => ({
         gameLevelInfo: null as GameLevelInfo | null,
-        contextMessages: [] as ContextMessage[]
+        contextMessages: [] as ContextMessage[],
+        readyForEndTurn: false,
     }),
 });

@@ -9,18 +9,16 @@ export interface Attributes {
 export class GameCharacter {
     characterID: string = '';
 
+    characterName: string = '';
+    characterDescription: string = '';
+
     attributes: Map<string, Attributes>;
     storage?: Record<string, any>;
 
     accountRecord?: AccountRecord;
 
-    operationLock: boolean;
-    readyForEndTurn: boolean;
-
     constructor() {
         this.attributes = new Map();
-        this.operationLock = false;
-        this.readyForEndTurn = false;
     }
 
     setAttribute(attrName: string, attrValue: any): void {
