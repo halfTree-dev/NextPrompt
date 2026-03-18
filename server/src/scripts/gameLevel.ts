@@ -60,7 +60,131 @@ export class GameLevel {
                 });
             }
         });
+
+        socketService.on("req_update_input", (socket, payload : { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
+            const account = accountManager.findAccountBySocket(socket);
+            if (!socket.rooms.has(this.levelID)) {
+                // 如果玩家不在当前关卡的房间里，则忽略
+                return;
+            }
+            if (!account || !this.onlineAccounts.has(account.accountId)) {
+                socket.emit("ack_update_input", { success: false, message: "未登录或不在当前关卡中，无法更新输入" });
+                logger.warn(`收到未登录玩家的输入更新请求，已拒绝`);
+                return;
+            }
+            const nodeID = payload.nodeID;
+            const inputSlots = payload.inputSlots;
+            const inputStringBars = payload.inputStringBars;
+
+            const node = this.nodeManager.nodes.get(nodeID);
+            if (!node) {
+                logger.warn(`玩家 ${account.userName} 试图更新不存在的节点 ${nodeID} 的输入，已拒绝`);
+                socket.emit("ack_update_input", { success: false, message: "试图更新不存在的节点" });
+                return;
+            }
+            if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
+                const character = this.characterManager.characters.get(rc.characterID);
+                return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+            })) {
+                logger.warn(`玩家 ${account.userName} 试图更新不属于自己的节点 ${nodeID} 的输入，已拒绝`);
+                socket.emit("ack_update_input", { success: false, message: "试图更新不属于自己的节点" });
+                return;
+            }
+
+            for (const [slotID, slotValue] of Object.entries(inputSlots)) {
+                if (node.inputSlots && node.inputSlots.get(slotID)) {
+                    const targetInputSlot = node.inputSlots.get(slotID);
+                    if (targetInputSlot) {
+                        const pointedNode = this.nodeManager.nodes.get(slotValue.inputID);
+                        if (pointedNode && (pointedNode.relatedCharacters.length === 0 || pointedNode.relatedCharacters.some(rc => {
+                            const character = this.characterManager.characters.get(rc.characterID);
+                            return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+                        }))) {
+                            targetInputSlot.inputID = slotValue.inputID;
+                        } else if (slotValue.inputID === "") {
+                            // 节点也可以连接到空，表示断开连接，这是允许的
+                            targetInputSlot.inputID = "";
+                        }
+                        else {
+                            logger.warn(`玩家 ${account.userName} 试图将节点 ${nodeID} 的输入槽 ${slotID} 连接到不可见或不属于自己的节点 "${slotValue.inputID}"，已拒绝`);
+                            socket.emit("ack_update_input", { success: false, message: `试图将输入槽连接到不可见或不属于自己的节点 "${slotValue.inputID}"` });
+                            return;
+                        }
+                    }
+                }
+                if (node.inputStringBars && node.inputStringBars.get(slotID)) {
+                    const targetInputStringBar = node.inputStringBars.get(slotID);
+                    if (targetInputStringBar) {
+                        targetInputStringBar.inputContent = slotValue.inputContent;
+                    }
+                }
+            }
+            for (const [stringBarID, stringBarValue] of Object.entries(inputStringBars)) {
+                if (node.inputStringBars && node.inputStringBars.get(stringBarID)) {
+                    const targetInputStringBar = node.inputStringBars.get(stringBarID);
+                    if (targetInputStringBar) {
+                        targetInputStringBar.inputContent = stringBarValue.inputContent;
+                    }
+                }
+            }
+            socket.emit("ack_update_input", { success: true, message: "输入更新成功" });
+        });
+
+        socketService.on("req_send_interact", (socket, payload : {nodeID: string}) => {
+            const account = accountManager.findAccountBySocket(socket);
+            if (!socket.rooms.has(this.levelID)) {
+                // 如果玩家不在当前关卡的房间里，则忽略
+                return;
+            }
+            if (!account || !this.onlineAccounts.has(account.accountId)) {
+                socket.emit("ack_send_interact", { success: false, message: "未登录或不在当前关卡中，无法执行交互" });
+                logger.warn(`收到未登录玩家的交互请求，已拒绝`);
+                return;
+            }
+            const nodeID = payload.nodeID;
+            const node = this.nodeManager.nodes.get(nodeID);
+            if (!node) {
+                logger.warn(`玩家 ${account.userName} 试图与不存在的节点 ${nodeID} 交互，已拒绝`);
+                socket.emit("ack_send_interact", { success: false, message: "试图与不存在的节点交互" });
+                return;
+            }
+            if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
+                const character = this.characterManager.characters.get(rc.characterID);
+                return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+            })) {
+                logger.warn(`玩家 ${account.userName} 试图与不属于自己的节点 ${nodeID} 交互，已拒绝`);
+                socket.emit("ack_send_interact", { success: false, message: "试图与不属于自己的节点交互" });
+                return;
+            }
+            if (!node.interactable) {
+                logger.warn(`玩家 ${account.userName} 试图与不可交互的节点 ${nodeID} 交互，已拒绝`);
+                socket.emit("ack_send_interact", { success: false, message: "试图与不可交互的节点交互" });
+                return;
+            }
+            if (node.onInteractCallback) {
+                const context = {
+                    level: this,
+                    logger: logger,
+                    node: node,
+                    account: account,
+                }
+                node.onInteractCallback(context);
+                socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
+            } else {
+                logger.warn(`节点 ${nodeID} 没有交互回调函数，无法执行交互`);
+                socket.emit("ack_send_interact", { success: false, message: "节点没有交互回调函数，无法执行交互，这很可能是该故事脚本的问题，请与开发者联系！" });
+            }
+        });
     }
+
+    getSocketFromAccount(accountId: string) {
+        const sockets = socketService.getSocketsInRoom(this.levelID);
+        return sockets.find(socket => {
+            const account = accountManager.findAccountBySocket(socket);
+            return account && account.accountId === accountId;
+        });
+    }
+
 
     broadcastGameContext() {
         function turnNodeIntoInfo(node : GameNode) : GameNodeInfo {

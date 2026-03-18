@@ -13,11 +13,32 @@ class GameManager {
         });
 
         bus.on("ack_update_input", (payload: any) => {
-            console.log("输入已更新", payload);
+            console.log("输入更新结果", payload);
+            if (payload.success && payload.message) {
+                popupNotify({
+                    title: "输入已更新",
+                    message: payload.message
+                });
+            } else if (payload.message) {
+                popupAlert({
+                    title: "输入更新失败",
+                    message: payload.message
+                });
+            }
         });
 
         bus.on("ack_send_interact", (payload: any) => {
-            console.log("交互已发送", payload);
+            if (payload.success && payload.message) {
+                popupNotify({
+                    title: "交互已发送",
+                    message: payload.message
+                });
+            } else if (payload.message) {
+                popupAlert({
+                    title: "交互发送失败",
+                    message: payload.message
+                });
+            }
         });
 
         bus.on("ack_send_end_turn_ready", (payload: any) => {

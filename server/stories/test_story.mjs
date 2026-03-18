@@ -12,7 +12,6 @@ level.hookManager.storyInitEvent = (context) => {
         lifeTimeRounds: 3,
         coolDownRounds: 2,
         inStackable: true,
-        interactable: true,
 
         inputSlots: new Map(Object.entries({
             "bullet": {
@@ -27,7 +26,22 @@ level.hookManager.storyInitEvent = (context) => {
                 inputHint: "The strategy for firing.",
                 inputContent: ""
             }
-        }))
+        })),
+
+        interactable: true,
+        onInteractCallback: (context) => {
+            const level = context.level;
+            const logger = context.logger;
+            const node = context.node;
+            const account = context.account;
+
+            // 测试用回调函数
+            const socket = level.getSocketFromAccount(account.accountId);
+            if (socket) {
+                socket.emit("evt_send_alert", { title: "你正在使用左轮", message: `你的子弹是 ${node.inputSlots.get("bullet").inputID}；射击技巧是 ${node.inputStringBars.get("strategy").inputContent}` });
+            }
+            logger.info(`玩家 ${account.userName} 触发了 ${node.displayText} 的交互回调`);
+        }
     })
 
     level.nodeManager.addNodeTemplate({

@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { GameLevel } from '../gameLevel';
 import logger from '../../utils/logger';
+import { AccountRecord } from '../../services/dataManger';
 
 export interface RelatedCharacter {
     characterID: string;
@@ -27,6 +28,10 @@ export interface InputStringBar {
 }
 
 export interface InteractCallbackContext {
+    level: GameLevel;
+    logger: typeof logger;
+    node: GameNode;
+    account: AccountRecord
 }
 
 export interface AdvanceCallbackContext {

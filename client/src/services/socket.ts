@@ -15,8 +15,8 @@ type SocketEvents = {
     "evt_update_lobby_chat": ChatMessage;
     "ack_chat_history": ChatMessage[];
 
-    "ack_update_input": any;
-    "ack_send_interact": any;
+    "ack_update_input": { success: boolean, message: string };
+    "ack_send_interact": { success: boolean, message: string };
     "ack_send_end_turn_ready": any;
 
     "evt_send_game_context": GameLevelInfo;

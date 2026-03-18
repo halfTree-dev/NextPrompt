@@ -12,6 +12,8 @@
 - 前端到后端：req_update_input, req_send_interact, req_send_end_turn_ready
 - 后端到前端：ack_update_input, ack_send_interact, ack_send_end_turn_ready,
 
+> update_input 同时传输节点选择和文本输入
+
 - 后端到前端：evt_send_game_context
 - 后端到前端：evt_send_message_context, evt_update_message_context
 

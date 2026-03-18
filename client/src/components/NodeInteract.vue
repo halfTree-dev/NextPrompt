@@ -24,7 +24,9 @@
 			<ul class="node-list">
 				<li class="node-list-item" v-for="inputSlot in nodeInputSlots" :key="inputSlot.slotID">
 					<span class="item-title">{{ inputSlot.inputHint }}</span>
+					<span class="target-title">{{ gameStore.gameLevelInfo?.nodes[inputSlot.inputID]?.displayText || "未选择" }}</span>
 					<button class="btn-secondary" @click="() => { processInputSlotID = inputSlot.slotID; showNodeSelectList = true; }">选择</button>
+					<button class="btn-secondary" @click="() => { processInputSlotID = inputSlot.slotID; clearNodeSelect(); }">解除</button>
 				</li>
 			</ul>
 		</div>
@@ -42,7 +44,7 @@
 		</div>
 
 		<div class="node-actions">
-			<button class="btn-primary" v-if="node.interactable">以当前设置执行交互</button>
+			<button class="btn-primary" v-if="node.interactable" @click="sendReqInteract">以当前设置执行交互</button>
 		</div>
 
 		<transition name="modal-fade">
@@ -72,7 +74,7 @@
 import { computed, ref } from 'vue';
 import { useGameStore, type GameNodeInfo } from '../stores/game';
 import NodeList from './NodeList.vue';
-import { popupNotify } from '../services/popup';
+import socketClient from '../services/socket';
 
 const gameStore = useGameStore();
 
@@ -92,20 +94,28 @@ const handleNodeSelect = (selectedNode: GameNodeInfo) => {
 	if (nodeInStore.value && nodeInStore.value.inputSlots) {
 		const targetSlot = nodeInStore.value.inputSlots[processInputSlotID.value];
 		if (targetSlot) {
-			targetSlot.connectedNodeID = selectedNode.nodeID;
+			targetSlot.inputID = selectedNode.nodeID;
 		}
-		popupNotify({
-			title: "已选择互动对象",
-			message: `已将 ${selectedNode.displayText} 连接到输入槽 ${processInputSlotID.value}`,
-			duration: 3000,
-		})
+		sendReqUpdateInput();
 	}
 	showNodeSelectList.value = false;
+};
+const clearNodeSelect = () => {
+	if (nodeInStore.value && nodeInStore.value.inputSlots) {
+		const targetSlot = nodeInStore.value.inputSlots[processInputSlotID.value];
+		if (targetSlot) {
+			targetSlot.inputID = "";
+		}
+		sendReqUpdateInput();
+	}
+	showNodeSelectList.value = false;
+	processInputSlotID.value = "";
 };
 const closeNodeSelectList = () => {
 	showNodeSelectList.value = false;
 	processInputSlotID.value = "";
 };
+
 
 const showInputStringBarEdit = ref(false);
 const currentEditingStringBarID = ref<string>("");
@@ -114,13 +124,9 @@ const handleEditInputStringBar = (inputContent: string) => {
 	if (nodeInStore.value && nodeInStore.value.inputStringBars) {
 		const targetBar = nodeInStore.value.inputStringBars[currentEditingStringBarID.value];
 		if (targetBar) {
-			targetBar.content = inputContent;
+			targetBar.inputContent = inputContent;
 		}
-		popupNotify({
-			title: "输入条已更新",
-			message: `已将输入条 ${currentEditingStringBarID.value} 的内容更新为 "${inputContent}"`,
-			duration: 3000,
-		})
+		sendReqUpdateInput();
 	}
 	showInputStringBarEdit.value = false;
 	currentEditingStringBarID.value = "";
@@ -130,6 +136,27 @@ const closeInputStringBarEdit = () => {
 	currentEditingStringBarID.value = "";
 };
 
+
+const sendReqUpdateInput = () => {
+	const payload = {
+		nodeID: node.nodeID,
+		inputSlots: nodeInputSlots.value,
+		inputStringBars: nodeInputStringBars.value,
+	}
+	socketClient.emit("req_update_input", payload);
+}
+
+const sendReqInteract = () => {
+	const payload = {
+		nodeID: node.nodeID
+	}
+	socketClient.emit("req_send_interact", payload);
+	showInputStringBarEdit.value = false;
+	showNodeSelectList.value = false;
+	processInputSlotID.value = "";
+	currentEditingStringBarID.value = "";
+	currentEditingStringBarContent.value = "";
+}
 
 </script>
 
