@@ -24,6 +24,7 @@
 ## Manage EndTurn
 - 前端到后端：req_end_turn
 - 后端到前端：ack_end_turn, evt_end_turn_result
+- 后端到前端：evt_next_round
 
 ## Manage Cancel Op Lock
 - 后端到前端：*evt_cancel_op_lock*
@@ -40,11 +41,10 @@
 
 
 # TODO:
-1. 完成 OpLock 和 EndTurn 的实际逻辑
+1. 完成 OpLock 的后端校验，实际上应当仅需对关键操作（send_interact, input）校验，因为这些操作会调用 LLM ，代价很大。
 2. 完成文档 VitePress 的移植，修改旧的文档使其符合目前逻辑
 3. 完成 OpLock 和 EndTurn 的前端动画效果
 4. 将旧版项目中的 LLM Tools 设定和相关逻辑移植到新版项目中
-5. 完成节点菜单中节点拖动移动位置
 6. 写故事脚本
 7. 为故事脚本设计一套有意思的战斗系统
 8. 上线，测试
@@ -55,3 +55,4 @@
 3. 增添新手引导故事脚本
 4. 对新用户提供引导教程
 5. 为游戏添加可选的动态背景，增强游戏氛围
+6. 完成节点菜单中节点拖动移动位置

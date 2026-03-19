@@ -29,6 +29,8 @@ type SocketEvents = {
     "ack_end_turn": { flag: boolean, message: string };
     "evt_end_turn_result": { onlineAccountsReadyForEndTurn: Record<string, boolean> };
 
+    "evt_next_round": {};
+
     "evt_cancel_op_lock": {};
 };
 const bus = mitt<SocketEvents>();
@@ -73,6 +75,8 @@ class SocketClient {
 
         this.socket.on("ack_end_turn", (payload) => bus.emit("ack_end_turn", payload));
         this.socket.on("evt_end_turn_result", (payload) => bus.emit("evt_end_turn_result", payload));
+
+        this.socket.on("evt_next_round", (payload) => bus.emit("evt_next_round", payload));
 
         this.socket.on("evt_cancel_op_lock", (payload) => bus.emit("evt_cancel_op_lock", payload));
     }

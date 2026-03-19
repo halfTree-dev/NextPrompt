@@ -96,6 +96,11 @@ class GameManager {
             gameStore.readyForEndTurn = payload.flag;
         });
 
+        bus.on("evt_next_round", (_ : any) => {
+            const gameStore = useGameStore();
+            gameStore.readyForEndTurn = false;
+        });
+
         bus.on("evt_end_turn_result", (payload: any) => {
             const gameStore = useGameStore();
             gameStore.onlineAccountsReadyForEndTurn = payload.onlineAccountsReadyForEndTurn;

@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import { EventEmitter } from "events";
 import logger from "../utils/logger";
 import { InputSlot, InputStringBar } from "../scripts/gameObjects/gameNode";
+import accountManager from "./accountManager";
 
 class SocketService extends EventEmitter {
     private io: Server | null = null;
@@ -24,10 +25,14 @@ class SocketService extends EventEmitter {
             this.emit("user_connected", socket);
 
             socket.on("req_user_signup", (payload: { userName: string; password: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_user_signup", socket, payload.userName, payload.password);
             });
 
             socket.on("req_user_login", (payload: { userName: string; password: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_user_login", socket, payload.userName, payload.password);
             });
 
@@ -36,14 +41,20 @@ class SocketService extends EventEmitter {
             });
 
             socket.on("req_join_room", (payload: { levelID: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_join_room", socket, payload);
             });
 
             socket.on("req_leave_room", (payload: { levelID: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_leave_room", socket, payload);
             });
 
             socket.on("req_send_lobby_chat", (payload: { content: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_send_lobby_chat", socket, payload);
             });
 
@@ -52,22 +63,26 @@ class SocketService extends EventEmitter {
             });
 
             socket.on("req_update_input", (payload: { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_update_input", socket, payload);
             });
 
             socket.on("req_send_interact", (payload: { nodeID: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_send_interact", socket, payload);
             });
 
-            socket.on("req_send_end_turn_ready", (payload: any) => {
-                this.emit("req_send_end_turn_ready", socket, payload);
-            });
-
             socket.on("req_send_game_chat", (payload: { content: string }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_send_game_chat", socket, payload);
             });
 
             socket.on("req_end_turn", (payload: { endTurnFlag: boolean }) => {
+                if (accountManager.getSocketOpLock(socket)) { return; }
+                accountManager.setSocketOpLock(socket);
                 this.emit("req_end_turn", socket, payload);
             });
 

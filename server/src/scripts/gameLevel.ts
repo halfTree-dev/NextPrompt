@@ -51,6 +51,7 @@ export class GameLevel {
                 logger.info(`玩家 ${account.userName} 已从关卡 ${this.levelID} 下线`);
             }
             this.checkAllReadyForNextTurnAndExecuteAdvance();
+            this.broadcastEndTurnResult();
         });
 
         socketService.on("req_send_game_chat", (socket, payload) => {
@@ -63,22 +64,22 @@ export class GameLevel {
                     sendType: 'chat'
                 });
             }
-            socket.emit("evt_cancel_op_lock", {});
+            accountManager.cancelSocketOpLock(socket);
         });
 
         socketService.on("req_update_input", (socket, payload : { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
             this.updateInput(socket, payload);
-            socket.emit("evt_cancel_op_lock", {});
+            accountManager.cancelSocketOpLock(socket);
         });
 
         socketService.on("req_send_interact", (socket, payload : {nodeID: string}) => {
             this.respondToInteract(socket, payload);
-            socket.emit("evt_cancel_op_lock", {});
+            accountManager.cancelSocketOpLock(socket);
         });
 
         socketService.on("req_end_turn", (socket, payload : { endTurnFlag: boolean }) => {
             this.respondToEndTurn(socket, payload);
-            socket.emit("evt_cancel_op_lock", {});
+            accountManager.cancelSocketOpLock(socket);
         });
     }
 
@@ -351,6 +352,11 @@ export class GameLevel {
         }
         this.hookManager.storyAdvanceEvent?.({ level: this, logger: logger });
         this.broadcastGameContext();
+        for (const accountId of this.onlineAccounts) {
+            this.onlineAccountsReadyForEndTurn.set(accountId, false);
+        }
+        this.broadcastEndTurnResult();
+        socketService.emitMessageToRoom(this.levelID, 'evt_next_round', {});
     }
 
     broadcastEndTurnResult() {

@@ -75,13 +75,14 @@
                 <div class="modal-content">
                     <span class="ready-header">
                         <h3>你已准备好结束回合</h3>
-                        <p>等待其他玩家准备中 [{{ preparedAccountCnt }}/{{ totalAccountCnt }}]</p>
+                        <p v-if="preparedAccountCnt < totalAccountCnt">等待其他玩家准备中 [{{ preparedAccountCnt }}/{{ totalAccountCnt }}]</p>
+                        <p v-if="preparedAccountCnt >= totalAccountCnt">所有玩家都已准备好，等待叙事者生成下一回合文本...</p>
                     </span>
                     <li class="ready-account" v-for="accountId in Object.keys(gameStore.onlineAccountsReadyForEndTurn || {})" :key="accountId">
                         <span class="account-name">{{ gameStore.onlineAccountsReadyForEndTurn[accountId]?.userName || accountId }}({{ accountId.slice(0, 6) }})</span>
                         <span class="account-status">{{ gameStore.onlineAccountsReadyForEndTurn[accountId]?.readyForEndTurn ? "准备" : "操作中" }}</span>
                     </li>
-                    <button class="close-btn" @click="setNotPrepared" :disabled="operationLock">取消准备</button>
+                    <button class="close-btn" @click="setNotPrepared" :disabled="operationLock || preparedAccountCnt >= totalAccountCnt">取消准备</button>
                 </div>
             </div>
         </transition>
@@ -530,6 +531,15 @@ const closeModal = () => {
     font-weight: bold;
     align-self: flex-end;
     margin-top: auto;
+}
+.close-btn:disabled,
+.end-turn-btn:disabled,
+.send-btn:disabled {
+    background: #888 !important;
+    color: #ccc !important;
+    cursor: not-allowed;
+    filter: grayscale(0.5) brightness(0.9);
+    opacity: 0.7;
 }
 .modal-fade-enter-active, .modal-fade-leave-active {
     transition: opacity 0.3s ease;
