@@ -11,7 +11,7 @@
 
         <main class="lobby-main">
             <!--接下来是房间列表显示，占用下方区域的左边部分-->
-            <section class="lobby-room-list" :style="{ width: leftPanelWidth + 'px' }">
+            <section class="lobby-room-list" :style="{ width: leftPanelWidth + 'px', pointerEvents: operationLock ? 'none' : 'auto', opacity: operationLock ? 0.6 : 1 }">
                 <ul class="room-list">
                     <li class="room-item" v-for="value in levels" :key="value.levelID" @click="joinRoom(value.levelID)">
                         <div class="room-info">
@@ -40,14 +40,14 @@
                         <div class="msg-content">{{ message.content }}</div>
                     </li>
                 </ul>
-                <div class="chat-input-area">
+                <div class="chat-input-area" :style="{ pointerEvents: operationLock ? 'none' : 'auto', opacity: operationLock ? 0.6 : 1 }">
                     <textarea
                         placeholder="在此输入消息"
                         rows="1"
                         @input="autoResize"
                         ref="chatInput"
                     ></textarea>
-                    <button class="send-btn" @click="sendChatMessage">发送到大厅</button>
+                    <button class="send-btn" @click="sendChatMessage" :disabled="operationLock">发送到大厅</button>
                 </div>
             </section>
         </main>
@@ -84,6 +84,7 @@ if (!accountStore.isLoginSuccess) {
     socketClient.emit('req_room_list', {})
     socketClient.emit('req_chat_history', {})
 }
+const operationLock = computed(() => accountStore.operationLock);
 
 const sendChatMessage = () => {
     if (!chatInput.value) return;

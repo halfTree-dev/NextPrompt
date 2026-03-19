@@ -67,6 +67,10 @@ class SocketService extends EventEmitter {
                 this.emit("req_send_game_chat", socket, payload);
             });
 
+            socket.on("req_end_turn", (payload: { endTurnFlag: boolean }) => {
+                this.emit("req_end_turn", socket, payload);
+            });
+
             socket.on("disconnect", () => {
                 logger.info(`Socket disconnected: ${socket.id}`);
                 this.emit("req_user_disconnect", socket);

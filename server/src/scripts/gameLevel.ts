@@ -12,6 +12,7 @@ import logger from "../utils/logger";
 import { Attributes } from "./gameObjects/gameCharacter";
 import GameNode, { InputSlot, InputStringBar, RelatedCharacter, Tag as NodeTag } from "./gameObjects/gameNode";
 import { cloneDeep } from "lodash";
+import { Socket } from "socket.io";
 
 export class GameLevel {
     levelID: string = "";
@@ -49,6 +50,7 @@ export class GameLevel {
                 this.delOnlineAccount(account.accountId);
                 logger.info(`玩家 ${account.userName} 已从关卡 ${this.levelID} 下线`);
             }
+            this.checkAllReadyForNextTurnAndExecuteAdvance();
         });
 
         socketService.on("req_send_game_chat", (socket, payload) => {
@@ -61,121 +63,22 @@ export class GameLevel {
                     sendType: 'chat'
                 });
             }
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on("req_update_input", (socket, payload : { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
-            const account = accountManager.findAccountBySocket(socket);
-            if (!socket.rooms.has(this.levelID)) {
-                // 如果玩家不在当前关卡的房间里，则忽略
-                return;
-            }
-            if (!account || !this.onlineAccounts.has(account.accountId)) {
-                socket.emit("ack_update_input", { success: false, message: "未登录或不在当前关卡中，无法更新输入" });
-                logger.warn(`收到未登录玩家的输入更新请求，已拒绝`);
-                return;
-            }
-            const nodeID = payload.nodeID;
-            const inputSlots = payload.inputSlots;
-            const inputStringBars = payload.inputStringBars;
-
-            const node = this.nodeManager.nodes.get(nodeID);
-            if (!node) {
-                logger.warn(`玩家 ${account.userName} 试图更新不存在的节点 ${nodeID} 的输入，已拒绝`);
-                socket.emit("ack_update_input", { success: false, message: "试图更新不存在的节点" });
-                return;
-            }
-            if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
-                const character = this.characterManager.characters.get(rc.characterID);
-                return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
-            })) {
-                logger.warn(`玩家 ${account.userName} 试图更新不属于自己的节点 ${nodeID} 的输入，已拒绝`);
-                socket.emit("ack_update_input", { success: false, message: "试图更新不属于自己的节点" });
-                return;
-            }
-
-            for (const [slotID, slotValue] of Object.entries(inputSlots)) {
-                if (node.inputSlots && node.inputSlots.get(slotID)) {
-                    const targetInputSlot = node.inputSlots.get(slotID);
-                    if (targetInputSlot) {
-                        const pointedNode = this.nodeManager.nodes.get(slotValue.inputID);
-                        if (pointedNode && (pointedNode.relatedCharacters.length === 0 || pointedNode.relatedCharacters.some(rc => {
-                            const character = this.characterManager.characters.get(rc.characterID);
-                            return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
-                        }))) {
-                            targetInputSlot.inputID = slotValue.inputID;
-                        } else if (slotValue.inputID === "") {
-                            // 节点也可以连接到空，表示断开连接，这是允许的
-                            targetInputSlot.inputID = "";
-                        }
-                        else {
-                            logger.warn(`玩家 ${account.userName} 试图将节点 ${nodeID} 的输入槽 ${slotID} 连接到不可见或不属于自己的节点 "${slotValue.inputID}"，已拒绝`);
-                            socket.emit("ack_update_input", { success: false, message: `试图将输入槽连接到不可见或不属于自己的节点 "${slotValue.inputID}"` });
-                            return;
-                        }
-                    }
-                }
-                if (node.inputStringBars && node.inputStringBars.get(slotID)) {
-                    const targetInputStringBar = node.inputStringBars.get(slotID);
-                    if (targetInputStringBar) {
-                        targetInputStringBar.inputContent = slotValue.inputContent;
-                    }
-                }
-            }
-            for (const [stringBarID, stringBarValue] of Object.entries(inputStringBars)) {
-                if (node.inputStringBars && node.inputStringBars.get(stringBarID)) {
-                    const targetInputStringBar = node.inputStringBars.get(stringBarID);
-                    if (targetInputStringBar) {
-                        targetInputStringBar.inputContent = stringBarValue.inputContent;
-                    }
-                }
-            }
-            socket.emit("ack_update_input", { success: true, message: "输入更新成功" });
+            this.updateInput(socket, payload);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on("req_send_interact", (socket, payload : {nodeID: string}) => {
-            const account = accountManager.findAccountBySocket(socket);
-            if (!socket.rooms.has(this.levelID)) {
-                // 如果玩家不在当前关卡的房间里，则忽略
-                return;
-            }
-            if (!account || !this.onlineAccounts.has(account.accountId)) {
-                socket.emit("ack_send_interact", { success: false, message: "未登录或不在当前关卡中，无法执行交互" });
-                logger.warn(`收到未登录玩家的交互请求，已拒绝`);
-                return;
-            }
-            const nodeID = payload.nodeID;
-            const node = this.nodeManager.nodes.get(nodeID);
-            if (!node) {
-                logger.warn(`玩家 ${account.userName} 试图与不存在的节点 ${nodeID} 交互，已拒绝`);
-                socket.emit("ack_send_interact", { success: false, message: "试图与不存在的节点交互" });
-                return;
-            }
-            if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
-                const character = this.characterManager.characters.get(rc.characterID);
-                return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
-            })) {
-                logger.warn(`玩家 ${account.userName} 试图与不属于自己的节点 ${nodeID} 交互，已拒绝`);
-                socket.emit("ack_send_interact", { success: false, message: "试图与不属于自己的节点交互" });
-                return;
-            }
-            if (!node.interactable) {
-                logger.warn(`玩家 ${account.userName} 试图与不可交互的节点 ${nodeID} 交互，已拒绝`);
-                socket.emit("ack_send_interact", { success: false, message: "试图与不可交互的节点交互" });
-                return;
-            }
-            if (node.onInteractCallback) {
-                const context = {
-                    level: this,
-                    logger: logger,
-                    node: node,
-                    account: account,
-                }
-                node.onInteractCallback(context);
-                socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
-            } else {
-                logger.warn(`节点 ${nodeID} 没有交互回调函数，无法执行交互`);
-                socket.emit("ack_send_interact", { success: false, message: "节点没有交互回调函数，无法执行交互，这很可能是该故事脚本的问题，请与开发者联系！" });
-            }
+            this.respondToInteract(socket, payload);
+            socket.emit("evt_cancel_op_lock", {});
+        });
+
+        socketService.on("req_end_turn", (socket, payload : { endTurnFlag: boolean }) => {
+            this.respondToEndTurn(socket, payload);
+            socket.emit("evt_cancel_op_lock", {});
         });
     }
 
@@ -197,6 +100,143 @@ export class GameLevel {
         });
     }
 
+    updateInput(socket: Socket, payload: { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) {
+        const account = accountManager.findAccountBySocket(socket);
+        if (!socket.rooms.has(this.levelID)) {
+            // 如果玩家不在当前关卡的房间里，则忽略
+            return;
+        }
+        if (!account || !this.onlineAccounts.has(account.accountId)) {
+            socket.emit("ack_update_input", { success: false, message: "未登录或不在当前关卡中，无法更新输入" });
+            logger.warn(`收到未登录玩家的输入更新请求，已拒绝`);
+            return;
+        }
+        const nodeID = payload.nodeID;
+        const inputSlots = payload.inputSlots;
+        const inputStringBars = payload.inputStringBars;
+
+        const node = this.nodeManager.nodes.get(nodeID);
+        if (!node) {
+            logger.warn(`玩家 ${account.userName} 试图更新不存在的节点 ${nodeID} 的输入，已拒绝`);
+            socket.emit("ack_update_input", { success: false, message: "试图更新不存在的节点" });
+            return;
+        }
+        if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
+            const character = this.characterManager.characters.get(rc.characterID);
+            return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+        })) {
+            logger.warn(`玩家 ${account.userName} 试图更新不属于自己的节点 ${nodeID} 的输入，已拒绝`);
+            socket.emit("ack_update_input", { success: false, message: "试图更新不属于自己的节点" });
+            return;
+        }
+
+        for (const [slotID, slotValue] of Object.entries(inputSlots)) {
+            if (node.inputSlots && node.inputSlots.get(slotID)) {
+                const targetInputSlot = node.inputSlots.get(slotID);
+                if (targetInputSlot) {
+                    const pointedNode = this.nodeManager.nodes.get(slotValue.inputID);
+                    if (pointedNode && (pointedNode.relatedCharacters.length === 0 || pointedNode.relatedCharacters.some(rc => {
+                        const character = this.characterManager.characters.get(rc.characterID);
+                        return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+                    }))) {
+                        targetInputSlot.inputID = slotValue.inputID;
+                    } else if (slotValue.inputID === "") {
+                        // 节点也可以连接到空，表示断开连接，这是允许的
+                        targetInputSlot.inputID = "";
+                    }
+                    else {
+                        logger.warn(`玩家 ${account.userName} 试图将节点 ${nodeID} 的输入槽 ${slotID} 连接到不可见或不属于自己的节点 "${slotValue.inputID}"，已拒绝`);
+                        socket.emit("ack_update_input", { success: false, message: `试图将输入槽连接到不可见或不属于自己的节点 "${slotValue.inputID}"` });
+                        return;
+                    }
+                }
+            }
+            if (node.inputStringBars && node.inputStringBars.get(slotID)) {
+                const targetInputStringBar = node.inputStringBars.get(slotID);
+                if (targetInputStringBar) {
+                    targetInputStringBar.inputContent = slotValue.inputContent;
+                }
+            }
+        }
+        for (const [stringBarID, stringBarValue] of Object.entries(inputStringBars)) {
+            if (node.inputStringBars && node.inputStringBars.get(stringBarID)) {
+                const targetInputStringBar = node.inputStringBars.get(stringBarID);
+                if (targetInputStringBar) {
+                    targetInputStringBar.inputContent = stringBarValue.inputContent;
+                }
+            }
+        }
+        socket.emit("ack_update_input", { success: true, message: "输入更新成功" });
+    }
+
+    respondToInteract(socket: Socket, payload: { nodeID: string }) {
+        const account = accountManager.findAccountBySocket(socket);
+        if (!socket.rooms.has(this.levelID)) {
+            // 如果玩家不在当前关卡的房间里，则忽略
+            return;
+        }
+        if (!account || !this.onlineAccounts.has(account.accountId)) {
+            socket.emit("ack_send_interact", { success: false, message: "未登录或不在当前关卡中，无法执行交互" });
+            logger.warn(`收到未登录玩家的交互请求，已拒绝`);
+            return;
+        }
+        const nodeID = payload.nodeID;
+        const node = this.nodeManager.nodes.get(nodeID);
+        if (!node) {
+            logger.warn(`玩家 ${account.userName} 试图与不存在的节点 ${nodeID} 交互，已拒绝`);
+            socket.emit("ack_send_interact", { success: false, message: "试图与不存在的节点交互" });
+            return;
+        }
+        if (node.relatedCharacters.length > 0 && !node.relatedCharacters.some(rc => {
+            const character = this.characterManager.characters.get(rc.characterID);
+            return character && character.accountRecord && character.accountRecord.accountId === account.accountId;
+        })) {
+            logger.warn(`玩家 ${account.userName} 试图与不属于自己的节点 ${nodeID} 交互，已拒绝`);
+            socket.emit("ack_send_interact", { success: false, message: "试图与不属于自己的节点交互" });
+            return;
+        }
+        if (!node.interactable) {
+            logger.warn(`玩家 ${account.userName} 试图与不可交互的节点 ${nodeID} 交互，已拒绝`);
+            socket.emit("ack_send_interact", { success: false, message: "试图与不可交互的节点交互" });
+            return;
+        }
+        if (node.onInteractCallback) {
+            const context = {
+                level: this,
+                logger: logger,
+                node: node,
+                account: account,
+            }
+            node.onInteractCallback(context);
+            socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
+        } else {
+            logger.warn(`节点 ${nodeID} 没有交互回调函数，无法执行交互`);
+            socket.emit("ack_send_interact", { success: false, message: "节点没有交互回调函数，无法执行交互，这很可能是该故事脚本的问题，请与开发者联系！" });
+        }
+    }
+
+    respondToEndTurn(socket: Socket, payload: { endTurnFlag: boolean }) {
+        const account = accountManager.findAccountBySocket(socket);
+        if (!socket.rooms.has(this.levelID)) {
+            // 如果玩家不在当前关卡的房间里，则忽略
+            return;
+        }
+        if (!account || !this.onlineAccounts.has(account.accountId)) {
+            socket.emit("ack_end_turn", { success: false, message: "未登录或不在当前关卡中，无法结束回合" });
+            logger.warn(`收到未登录玩家的结束回合请求，已拒绝`);
+            return;
+        }
+        if (payload.endTurnFlag) {
+            this.onlineAccountsReadyForEndTurn.set(account.accountId, true);
+            logger.info(`玩家 ${account.userName} 已准备好结束回合`);
+            this.checkAllReadyForNextTurnAndExecuteAdvance();
+            this.broadcastEndTurnResult();
+        } else {
+            this.onlineAccountsReadyForEndTurn.set(account.accountId, false);
+            logger.info(`玩家 ${account.userName} 取消了结束回合的准备`);
+            this.broadcastEndTurnResult();
+        }
+    }
 
     broadcastGameContext() {
         function turnNodeIntoInfo(node : GameNode) : GameNodeInfo {
@@ -260,9 +300,11 @@ export class GameLevel {
                     return nodeInfo.relatedCharacters.some(rc => rc.characterID === characterForAccount.characterID);
                 }));
                 socket.emit('evt_send_game_context', filteredResult);
+                socket.emit('evt_end_turn_result', { onlineAccountsReadyForEndTurn: Object.fromEntries(this.onlineAccountsReadyForEndTurn.entries()) });
             } else {
                 // 没有被分配角色的玩家则可以看见所有节点
                 socket.emit('evt_send_game_context', result);
+                socket.emit('evt_end_turn_result', { onlineAccountsReadyForEndTurn: Object.fromEntries(this.onlineAccountsReadyForEndTurn.entries()) });
             }
         }
     }
@@ -309,6 +351,38 @@ export class GameLevel {
         }
         this.hookManager.storyAdvanceEvent?.({ level: this, logger: logger });
         this.broadcastGameContext();
+    }
+
+    broadcastEndTurnResult() {
+        interface AccountReadyInfo {
+            accountId: string;
+            userName: string;
+            readyForEndTurn: boolean;
+        }
+        const onlineAccountsReadyForEndTurn: Record<string, AccountReadyInfo> = {};
+        for (const accountId of this.onlineAccounts) {
+            const account = dataManager.getAccount(accountId);
+            onlineAccountsReadyForEndTurn[accountId] = {
+                accountId: accountId,
+                userName: account ? account.userName : "",
+                readyForEndTurn: this.onlineAccountsReadyForEndTurn.get(accountId) || false,
+            };
+        }
+        const sockets = socketService.getSocketsInRoom(this.levelID);
+        for (const socket of sockets) {
+            socket.emit('evt_end_turn_result', { onlineAccountsReadyForEndTurn: onlineAccountsReadyForEndTurn });
+        }
+    }
+
+    checkAllReadyForNextTurnAndExecuteAdvance() : boolean {
+        for (const accountId of this.onlineAccounts) {
+            if (!this.onlineAccountsReadyForEndTurn.get(accountId)) {
+                return false;
+            }
+        }
+        this.goNextRound();
+        logger.info(`所有玩家都已准备好，进入下一回合 ${this.currRound}`);
+        return true;
     }
 
 }

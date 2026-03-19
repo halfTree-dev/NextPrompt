@@ -41,11 +41,6 @@ class GameManager {
             }
         });
 
-        bus.on("ack_send_end_turn_ready", (payload: any) => {
-            console.log("准备结束回合状态更新", payload);
-        });
-
-
         bus.on("evt_send_game_context", (payload: GameLevelInfo) => {
             const gameStore = useGameStore();
             gameStore.gameLevelInfo = payload;
@@ -89,6 +84,23 @@ class GameManager {
         bus.on("evt_send_effect", (payload: any) => {
             console.log("收到游戏效果:", payload);
         });
+
+        bus.on("ack_end_turn", (payload: any) => {
+            const gameStore = useGameStore();
+            if (payload.message) {
+                popupNotify({
+                    title: payload.flag ? "已设定准备回合结束" : "已取消设定准备回合结束",
+                    message: payload.message
+                });
+            }
+            gameStore.readyForEndTurn = payload.flag;
+        });
+
+        bus.on("evt_end_turn_result", (payload: any) => {
+            const gameStore = useGameStore();
+            gameStore.onlineAccountsReadyForEndTurn = payload.onlineAccountsReadyForEndTurn;
+        });
+
     }
 }
 

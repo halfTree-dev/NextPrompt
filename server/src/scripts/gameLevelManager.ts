@@ -35,37 +35,45 @@ export class GameLevelManager {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
                 socket.emit('evt_send_alert', { title: "啊，不对", message: "这位朋友，你貌似没有登陆啊，因此我们无法为您提供大厅当前的信息，也许是登陆状况出了点问题？再登陆一遍试试怎么样？" });
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             this.sendRoomList(socket);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on('req_chat_history', (socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             this.sendChatHistory(socket);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on('req_send_lobby_chat', (socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
                 socket.emit('evt_send_alert', { title: "谁在说话？", message: "抱歉啊这位朋友，你貌似没有登陆，按照我的工作原则，我没法向服务器传达你的话语呢，尝试重新登陆试试？麻烦啦。" });
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             this.updateNewChatMessage(account.userName, payload.content);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on('req_join_room', (socket : Socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
                 socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，刚才负责这个房间的服务进程告诉我：她不知道你是谁，貌似我们这边丢掉了你的登录信息，可能是我们的失误，可以尝试重新登陆一遍吗？" });
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             const gameLevel = this.levels.get(payload.levelID);
             if (!gameLevel) {
                 socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，我们的转接服务表示你要去的那个游戏房间不存在了，我知道这听起来有些奇怪，但是为了避免你在这里迷路，请不要去那里了，选一些别的游戏房间试试吧，麻烦了！" });
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
 
@@ -78,6 +86,7 @@ export class GameLevelManager {
             }
             if (alreadyInRoom) {
                 socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，你貌似已经在另一个房间里了，或者您可能在其它设备/标签页上登录了。按照我的工作原则，你无法同时加入多场游戏，请先退出先前进入的房间再试！" });
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
 
@@ -94,15 +103,18 @@ export class GameLevelManager {
             gameLevel.broadcastGameContext();
             gameLevel.broadcastMessageContext();
             socket.emit('ack_join_room', { success: true, levelID: payload.levelID });
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on('req_leave_room', (socket : Socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             const gameLevel = this.levels.get(payload.levelID);
             if (!gameLevel) {
+                socket.emit("evt_cancel_op_lock", {});
                 return;
             }
             socket.leave(payload.levelID);
@@ -118,6 +130,7 @@ export class GameLevelManager {
             gameLevel.broadcastGameContext();
             gameLevel.broadcastMessageContext();
             socket.emit('ack_leave_room', { success: true, levelID: payload.levelID });
+            socket.emit("evt_cancel_op_lock", {});
         });
 
     }

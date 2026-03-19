@@ -10,6 +10,12 @@ export interface AccountRecordInfo {
     usedTokens: number; // 玩家参与游戏中的 Token 消耗总数
 }
 
+export interface AccountReadyInfo {
+    accountId: string;
+    userName: string;
+    readyForEndTurn: boolean;
+}
+
 export const useAccountStore = defineStore('account', {
     state: () => ({
         isLoginSuccess: false,

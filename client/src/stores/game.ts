@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { AccountRecordInfo } from "./account";
+import type { AccountReadyInfo, AccountRecordInfo } from "./account";
 
 export interface RelatedCharacter {
     characterID: string;
@@ -92,5 +92,6 @@ export const useGameStore = defineStore('game', {
         gameLevelInfo: null as GameLevelInfo | null,
         contextMessages: [] as ContextMessage[],
         readyForEndTurn: false,
+        onlineAccountsReadyForEndTurn: {} as Record<string, AccountReadyInfo>
     }),
 });

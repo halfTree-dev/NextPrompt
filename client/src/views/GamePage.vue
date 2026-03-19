@@ -3,6 +3,7 @@
         <!-- 标题占用屏幕最上方一小部分 -->
         <header class="game-header">
             <h2 class="game-title">故事：{{ level ? level.levelName : "???" }}</h2>
+            <h3 class="game-title">第 {{ level ? level.currRound : "???" }} 段落</h3>
             <div class="header-right">
                 <button class="settings-btn">设置</button>
                 <button class="menu-btn">菜单</button>
@@ -25,13 +26,13 @@
                     <p class="character-description">{{ myCharacter ? myCharacter.characterDescription : "你是当前故事的一名读者。" }}</p>
                 </div>
                 <div class="end-turn-area">
-                    <button class="end-turn-btn">准备结束回合</button>
+                    <button class="end-turn-btn" @click="setPrepared" :disabled="operationLock">准备结束回合 [{{ preparedAccountCnt }}/{{ totalAccountCnt }}]</button>
                 </div>
             </section>
 
             <div class="resizer" @mousedown="startLeftResize"></div>
 
-            <NodeList class="game-nodes" @node-click="openNodeDetails" />
+            <NodeList class="game-nodes" :style="{ pointerEvents: operationLock ? 'none' : 'auto', opacity: operationLock ? 0.6 : 1 }" @node-click="openNodeDetails" />
 
             <div class="resizer" @mousedown="startRightResize"></div>
 
@@ -56,7 +57,7 @@
                         @input="autoResize"
                         ref="chatInput"
                     ></textarea>
-                    <button class="send-btn" @click="sendGameMessage">发送给其它玩家</button>
+                    <button class="send-btn" @click="sendGameMessage" :disabled="operationLock">发送给其它玩家</button>
                 </div>
             </section>
         </main>
@@ -65,6 +66,22 @@
             <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
                 <div class="modal-content">
                     <NodeInteract v-if="activeNode" :node="activeNode" />
+                </div>
+            </div>
+        </transition>
+
+        <transition name="modal-fade">
+            <div class="modal-overlay" v-if="gameStore.readyForEndTurn">
+                <div class="modal-content">
+                    <span class="ready-header">
+                        <h3>你已准备好结束回合</h3>
+                        <p>等待其他玩家准备中 [{{ preparedAccountCnt }}/{{ totalAccountCnt }}]</p>
+                    </span>
+                    <li class="ready-account" v-for="accountId in Object.keys(gameStore.onlineAccountsReadyForEndTurn || {})" :key="accountId">
+                        <span class="account-name">{{ gameStore.onlineAccountsReadyForEndTurn[accountId]?.userName || accountId }}({{ accountId.slice(0, 6) }})</span>
+                        <span class="account-status">{{ gameStore.onlineAccountsReadyForEndTurn[accountId]?.readyForEndTurn ? "准备" : "操作中" }}</span>
+                    </li>
+                    <button class="close-btn" @click="setNotPrepared" :disabled="operationLock">取消准备</button>
                 </div>
             </div>
         </transition>
@@ -85,6 +102,7 @@ const level = computed(() => gameStore.gameLevelInfo);
 const messages = computed(() => gameStore.contextMessages || [])
 
 const accountStore = useAccountStore()
+const operationLock = computed(() => accountStore.operationLock);
 
 if (!accountStore.isLoginSuccess) {
     popupNotify({
@@ -120,6 +138,22 @@ const sendGameMessage = () => {
     }
     autoResize();
 }
+
+const preparedAccountCnt = computed(() => {
+    let result = 0;
+    for (const ready of Object.values(gameStore.onlineAccountsReadyForEndTurn || {})) { if (ready.readyForEndTurn) result++; }
+    return result;
+})
+const totalAccountCnt = computed(() => Object.keys(gameStore.onlineAccountsReadyForEndTurn || {}).length);
+const setPrepared = () => {
+    gameStore.readyForEndTurn = true;
+    socketClient.emit("req_end_turn", { endTurnFlag: true });
+}
+const setNotPrepared = () => {
+    gameStore.readyForEndTurn = false;
+    socketClient.emit("req_end_turn", { endTurnFlag: false });
+}
+
 
 // 下面响应玩家拖动调整面板宽度的逻辑
 const screenWidth = window.innerWidth
@@ -427,7 +461,7 @@ const closeModal = () => {
     cursor: pointer;
 }
 
-/* Modal Popup Styles */
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -462,6 +496,30 @@ const closeModal = () => {
     border-radius: 0;
     margin: 15px 0;
 }
+
+.ready-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-panel, #2d2d2d);
+    padding: 10px;
+    border-radius: 0;
+    margin: 15px 0;
+}
+.ready-header h3 {
+    margin: 0 0 5px 0;
+    color: var(--color-primary, #4caf50);
+}
+.ready-account {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-divider, #5a5a5a);
+	font-size: 0.98rem;
+}
+
 .close-btn {
     background: #d32f2f;
     color: white;
@@ -470,7 +528,6 @@ const closeModal = () => {
     border-radius: 0;
     cursor: pointer;
     font-weight: bold;
-    float: right;
     align-self: flex-end;
     margin-top: auto;
 }

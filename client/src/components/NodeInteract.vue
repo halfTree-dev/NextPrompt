@@ -137,7 +137,6 @@ const closeInputStringBarEdit = () => {
 	currentEditingStringBarID.value = "";
 };
 
-
 const sendReqUpdateInput = () => {
 	const payload = {
 		nodeID: node.nodeID,

@@ -36,6 +36,11 @@ class AccountManager {
             })
             localStorage.setItem("accountInfo", JSON.stringify(payload.accountInfo));
         });
+
+        bus.on("evt_cancel_op_lock", (_ : {}) => {
+            const accountStore = useAccountStore();
+            accountStore.operationLock = false;
+        });
     }
 }
 

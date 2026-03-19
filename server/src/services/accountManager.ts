@@ -21,14 +21,17 @@ class AccountManager extends EventEmitter {
     public init() {
         socketService.on("req_user_signup", (socket: Socket, userName: string, password: string) => {
             this.handleUserSignup(socket, userName, password);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on("req_user_login", (socket: Socket, userId: string, password: string) => {
             this.handleUserLogin(socket, userId, password);
+            socket.emit("evt_cancel_op_lock", {});
         });
 
         socketService.on("req_user_disconnect", (socket: Socket) => {
             this.handleUserDisconnect(socket);
+            socket.emit("evt_cancel_op_lock", {});
         });
     }
 

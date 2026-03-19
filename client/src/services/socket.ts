@@ -1,7 +1,7 @@
 import mitt from "mitt";
 import { io, Socket } from "socket.io-client";
 
-import { type AccountRecordInfo } from "../stores/account";
+import { useAccountStore, type AccountRecordInfo } from "../stores/account";
 import type { ChatMessage, LobbyLevelInfo } from "../stores/lobby";
 import type { ContextMessage, GameLevelInfo } from "../stores/game";
 
@@ -17,7 +17,6 @@ type SocketEvents = {
 
     "ack_update_input": { success: boolean, message: string };
     "ack_send_interact": { success: boolean, message: string };
-    "ack_send_end_turn_ready": any;
 
     "evt_send_game_context": GameLevelInfo;
     "evt_send_message_context": ContextMessage[];
@@ -26,6 +25,11 @@ type SocketEvents = {
     "evt_send_notify": { title: string, message: string, duration?: number };
     "evt_send_alert": { title: string, message: string };
     "evt_send_effect": any;
+
+    "ack_end_turn": { flag: boolean, message: string };
+    "evt_end_turn_result": { onlineAccountsReadyForEndTurn: Record<string, boolean> };
+
+    "evt_cancel_op_lock": {};
 };
 const bus = mitt<SocketEvents>();
 
@@ -58,7 +62,6 @@ class SocketClient {
 
         this.socket.on("ack_update_input", (payload) => bus.emit("ack_update_input", payload));
         this.socket.on("ack_send_interact", (payload) => bus.emit("ack_send_interact", payload));
-        this.socket.on("ack_send_end_turn_ready", (payload) => bus.emit("ack_send_end_turn_ready", payload));
 
         this.socket.on("evt_send_game_context", (payload) => bus.emit("evt_send_game_context", payload));
         this.socket.on("evt_send_message_context", (payload) => bus.emit("evt_send_message_context", payload));
@@ -67,10 +70,19 @@ class SocketClient {
         this.socket.on("evt_send_notify", (payload) => bus.emit("evt_send_notify", payload));
         this.socket.on("evt_send_alert", (payload) => bus.emit("evt_send_alert", payload));
         this.socket.on("evt_send_effect", (payload) => bus.emit("evt_send_effect", payload));
+
+        this.socket.on("ack_end_turn", (payload) => bus.emit("ack_end_turn", payload));
+        this.socket.on("evt_end_turn_result", (payload) => bus.emit("evt_end_turn_result", payload));
+
+        this.socket.on("evt_cancel_op_lock", (payload) => bus.emit("evt_cancel_op_lock", payload));
     }
 
     public emit(event: string, payload: any) {
         this.socket.emit(event, payload);
+        const accountStore = useAccountStore();
+        if (event.startsWith("req_")) {
+            accountStore.operationLock = true;
+        }
     }
 }
 

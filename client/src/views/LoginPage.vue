@@ -14,7 +14,7 @@
                 <section class="login-form form-box" v-if="showForm === 'login'">
                     <input type="text" v-model="loginUserName" placeholder="用户 ID" />
                     <input type="password" v-model="loginPassWord" placeholder="密码" />
-                    <button class="btn-primary" @click="sendLogin">登陆</button>
+                    <button class="btn-primary" @click="sendLogin" :disabled="operationLock">登陆</button>
                     <div class="login-hint">
                         <p>如果没有账号的话，你可以试着</p>
                         <button class="btn-text" @click="showForm = 'register'">注册</button>
@@ -25,7 +25,7 @@
                     <input type="text" v-model="registerUserName" placeholder="用户名" />
                     <input type="password" v-model="registerPassword" placeholder="密码" />
                     <input type="password" v-model="confirmPassword" placeholder="确认密码（应当和上面的密码相同）" />
-                    <button class="btn-primary" @click="sendRegister">注册</button>
+                    <button class="btn-primary" @click="sendRegister" :disabled="operationLock">注册</button>
                     <div class="login-hint">
                         <p>为了将故事和你联系起来，我需要你的名字</p>
                         <button class="btn-text" @click="showForm = 'login'">登陆</button>
@@ -39,10 +39,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { popupNotify } from '../services/popup'
 import socketClient from '../services/socket'
-import type { AccountRecordInfo } from '../stores/account';
+import { useAccountStore, type AccountRecordInfo } from '../stores/account';
 const showForm = ref<'login' | 'register'>('register')
 
 const loginUserName = ref('');
@@ -50,6 +50,9 @@ const loginPassWord = ref('');
 const registerUserName = ref('');
 const registerPassword = ref('');
 const confirmPassword = ref('');
+
+const accountStore = useAccountStore();
+const operationLock = computed(() => accountStore.operationLock);
 
 async function getHashedPassword(password: string) {
     if (password.length === 0) return 'whynotsetapasswordyoucirno999';
