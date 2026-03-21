@@ -65,16 +65,16 @@ async function getHashedPassword(password: string) {
 async function sendLogin() {
     if (loginUserName.value.length === 0) {
         popupNotify({
-            title: '我想你需要注意一下',
-            message: `朋友，你貌似没有输入用户 ID，请输入你的用户 ID，这样我们才能找到你的账号！`,
+            title: '无效的用户 ID',
+            message: `没有输入用户 ID，请输入你的用户 ID，这样我们才能找到你的账号`,
             duration: 3000,
         })
         return;
     }
     if (loginPassWord.value.length === 0) {
         popupNotify({
-            title: '我想你需要注意一下',
-            message: `朋友，你貌似没有输入密码，是因为你的账户没有密码吗？理论上这也可以，不过我建议你设置一个，这样安全一点！`,
+            title: '注意：空密码',
+            message: `不为账号设置密码是可行的，但若要保证账号不被他人登陆，建议设置密码`,
             duration: 3000,
         })
     }
@@ -90,24 +90,24 @@ async function sendLogin() {
 async function sendRegister() {
     if (registerUserName.value.length === 0) {
         popupNotify({
-            title: '我想你需要注意一下',
-            message: `朋友，可以告诉我你的名字吗？`,
+            title: '无效的注册请求',
+            message: `若要注册一个账号，用户名是必要的`,
             duration: 3000,
         })
         return;
     }
     if (registerPassword.value !== confirmPassword.value) {
         popupNotify({
-            title: '我想你需要注意一下',
-            message: `朋友，你两次输入的密码不一致，请确认你的密码输入无误！`,
+            title: '无效的注册请求',
+            message: `你输入的密码和确认密码不一致，请检查后重新输入`,
             duration: 3000,
         })
         return;
     }
     if (registerPassword.value.length === 0) {
         popupNotify({
-            title: '我想你需要注意一下',
-            message: `朋友，你貌似没有为账号设置密码，理论上这也可以，不过我建议你设置一个，这样安全一点！`,
+            title: '注意：空密码',
+            message: `不为账号设置密码是可行的，但若要保证账号不被他人登陆，建议设置密码`,
             duration: 3000,
         })
     }
@@ -127,15 +127,15 @@ if (localStorage.getItem("accountInfo")) {
         loginUserName.value = accountInfo.accountId;
     }
     popupNotify({
-        title: '你好像有点脸熟',
-        message: `哦！我记起来了，你是 ${accountInfo.userName} 对吧！你应该是想登陆这个账号对吗，我帮你把用户 ID ${accountInfo.accountId} 填好了，怎么样？`,
-        duration: 6000,
+        title: '欢迎回来',
+        message: `你好 ${accountInfo.userName}，你曾登陆过账号，已自动填写了用户 ID ${accountInfo.accountId}`,
+        duration: 3500,
     })
 } else {
     popupNotify({
-        title: '没见过的生面孔',
-        message: `这位朋友，我也是第一次见到你呢，你应该先注册一个账号才能玩游戏。如果你已经有账号的话，可以直接登录，这样我就能记起来你了！`,
-        duration: 6000,
+        title: '欢迎来到 Next Prompt',
+        message: `这位读者，欢迎来到 Next Prompt！在这里，你可以体验由大语言模型驱动的文字冒险游戏。请先注册一个账号，或者如果你已经有账号了，可以直接登录。`,
+        duration: 4500,
     })
 }
 </script>

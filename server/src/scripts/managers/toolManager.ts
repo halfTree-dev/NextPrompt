@@ -54,7 +54,7 @@ export class ToolManager {
     }
 
     async executeToolCalls(toolCalls: ChatGLMToolCall[], context: ToolContext): Promise<void> {
-        logger.debug(`[ToolManager] Executing ${toolCalls.length} tool calls`);
+        logger.debug(`调用 LLM 的 ${toolCalls.length} 个工具函数`);
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
             const tool = this.tools[functionName];
@@ -63,7 +63,7 @@ export class ToolManager {
                 try {
                     args = JSON.parse(toolCall.function.arguments);
                 } catch (e) {
-                    logger.error(`[ToolManager] Failed to parse arguments for tool ${functionName}:`, e);
+                    logger.error(`工具函数 ${functionName} 的调用失败`, e);
                     continue;
                 }
                 await tool.callback(args, context);

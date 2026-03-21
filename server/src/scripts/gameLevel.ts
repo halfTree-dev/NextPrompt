@@ -109,7 +109,7 @@ export class GameLevel {
         }
         if (!account || !this.onlineAccounts.has(account.accountId)) {
             socket.emit("ack_update_input", { success: false, message: "未登录或不在当前关卡中，无法更新输入" });
-            logger.warn(`收到未登录玩家的输入更新请求，已拒绝`);
+            logger.warn(`收到未登录玩家的输入更新请求，已拒绝，其 Socket 为 ${socket}`);
             return;
         }
         const nodeID = payload.nodeID;
@@ -178,7 +178,7 @@ export class GameLevel {
         }
         if (!account || !this.onlineAccounts.has(account.accountId)) {
             socket.emit("ack_send_interact", { success: false, message: "未登录或不在当前关卡中，无法执行交互" });
-            logger.warn(`收到未登录玩家的交互请求，已拒绝`);
+            logger.warn(`收到未登录玩家的交互请求，已拒绝，其 Socket 为 ${socket}`);
             return;
         }
         const nodeID = payload.nodeID;

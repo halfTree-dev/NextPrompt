@@ -55,7 +55,7 @@ export class GameLevelManager {
         socketService.on('req_send_lobby_chat', (socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
-                socket.emit('evt_send_alert', { title: "谁在说话？", message: "抱歉啊这位朋友，你貌似没有登陆，按照我的工作原则，我没法向服务器传达你的话语呢，尝试重新登陆试试？麻烦啦。" });
+                socket.emit('evt_send_alert', { title: "收到未登录用户的请求", message: "在未登录情况下，无法发送大厅聊天消息" });
                 accountManager.cancelSocketOpLock(socket);
                 return;
             }
@@ -66,13 +66,13 @@ export class GameLevelManager {
         socketService.on('req_join_room', (socket : Socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
-                socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，刚才负责这个房间的服务进程告诉我：她不知道你是谁，貌似我们这边丢掉了你的登录信息，可能是我们的失误，可以尝试重新登陆一遍吗？" });
+                socket.emit('evt_send_alert', { title: "收到未登录用户的请求", message: "在未登录情况下，无法加入游戏房间" });
                 accountManager.cancelSocketOpLock(socket);
                 return;
             }
             const gameLevel = this.levels.get(payload.levelID);
             if (!gameLevel) {
-                socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，我们的转接服务表示你要去的那个游戏房间不存在了，我知道这听起来有些奇怪，但是为了避免你在这里迷路，请不要去那里了，选一些别的游戏房间试试吧，麻烦了！" });
+                socket.emit('evt_send_alert', { title: "请求的房间不存在", message: "所请求的游戏房间不存在" });
                 accountManager.cancelSocketOpLock(socket);
                 return;
             }
@@ -85,7 +85,7 @@ export class GameLevelManager {
                 }
             }
             if (alreadyInRoom) {
-                socket.emit('evt_send_alert', { title: "加入游戏出错", message: "这位朋友，你貌似已经在另一个房间里了，或者您可能在其它设备/标签页上登录了。按照我的工作原则，你无法同时加入多场游戏，请先退出先前进入的房间再试！" });
+                socket.emit('evt_send_alert', { title: "已在其他房间", message: "无法使用同一个账号同时登陆多个房间" });
                 accountManager.cancelSocketOpLock(socket);
                 return;
             }
@@ -159,7 +159,6 @@ export class GameLevelManager {
             };
             result.levels.push(levelInfo);
         }
-        logger.info(`向 socket ${socket.id} 发送房间列表信息: ${JSON.stringify(result)}`);
         socket.emit('ack_room_list', result);
     }
 

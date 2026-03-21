@@ -20,5 +20,5 @@ accountManager.init();
 gameLevelManager.init();
 
 server.listen(configManager.port, () => {
-    logger.info(`服务器运行在端口 ${configManager.port}`);
+    logger.info(`服务器启动完毕，运行在端口 ${configManager.port}`);
 });

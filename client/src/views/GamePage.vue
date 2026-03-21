@@ -107,9 +107,9 @@ const operationLock = computed(() => accountStore.operationLock);
 
 if (!accountStore.isLoginSuccess) {
     popupNotify({
-        title: "抱歉，我不认识你",
-        message: "这位朋友，可以先登陆再进入大厅吗？我不能允许没有身份的访客进入，这是我的职责，还请谅解。",
-        duration: 3000,
+        title: "进入大厅失败",
+        message: "注意，你需要先登录",
+        duration: 1000,
     })
     router.push("/")
 }
@@ -132,8 +132,8 @@ const sendGameMessage = () => {
         chatInput.value.value = "";
     } else {
         popupNotify({
-            title: "我好像没听清",
-            message: "我似乎没听见你在输入栏输入的文本，好像你什么也没输入啊。",
+            title: "未输入任何内容",
+            message: "发送栏的的内容为空",
             duration: 2000,
         })
     }

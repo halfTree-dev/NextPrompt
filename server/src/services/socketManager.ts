@@ -21,7 +21,7 @@ class SocketService extends EventEmitter {
         });
 
         this.io.on("connection", (socket: Socket) => {
-            logger.info(`Socket connected: ${socket.id}`);
+            logger.info(`Socket ${socket.id} - ${socket.handshake.address} 加入了服务器`);
             this.emit("user_connected", socket);
 
             socket.on("req_user_signup", (payload: { userName: string; password: string }) => {
@@ -87,7 +87,7 @@ class SocketService extends EventEmitter {
             });
 
             socket.on("disconnect", () => {
-                logger.info(`Socket disconnected: ${socket.id}`);
+                logger.info(`Socket ${socket.id} - ${socket.handshake.address} 断开连接`);
                 this.emit("req_user_disconnect", socket);
             });
 

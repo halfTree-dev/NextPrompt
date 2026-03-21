@@ -9,19 +9,18 @@ class GameManager {
         bus.on("evt_send_game_context", (payload: any) => {
             const gameStore = useGameStore();
             gameStore.gameLevelInfo = payload as GameLevelInfo;
-            console.log("游戏上下文已更新", gameStore.gameLevelInfo);
         });
 
         bus.on("ack_update_input", (payload: any) => {
-            console.log("输入更新结果", payload);
             if (payload.success && payload.message) {
                 popupNotify({
-                    title: "输入已更新",
-                    message: payload.message
+                    title: "已更新节点状态",
+                    message: payload.message,
+                    duration: 1000
                 });
             } else if (payload.message) {
                 popupAlert({
-                    title: "输入更新失败",
+                    title: "更新节点状态失败",
                     message: payload.message
                 });
             }
@@ -30,12 +29,13 @@ class GameManager {
         bus.on("ack_send_interact", (payload: any) => {
             if (payload.success && payload.message) {
                 popupNotify({
-                    title: "交互已发送",
-                    message: payload.message
+                    title: "已提交交互执行",
+                    message: payload.message,
+                    duration: 1000
                 });
             } else if (payload.message) {
                 popupAlert({
-                    title: "交互发送失败",
+                    title: "失败的交互请求！",
                     message: payload.message
                 });
             }
@@ -83,6 +83,7 @@ class GameManager {
 
         bus.on("evt_send_effect", (payload: any) => {
             console.log("收到游戏效果:", payload);
+            // TODO: 根据效果类型和内容，更新游戏状态或界面
         });
 
         bus.on("ack_end_turn", (payload: any) => {
@@ -90,7 +91,8 @@ class GameManager {
             if (payload.message) {
                 popupNotify({
                     title: payload.flag ? "已设定准备回合结束" : "已取消设定准备回合结束",
-                    message: payload.message
+                    message: payload.message,
+                    duration: 1000
                 });
             }
             gameStore.readyForEndTurn = payload.flag;

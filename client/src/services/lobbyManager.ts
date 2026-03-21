@@ -17,8 +17,8 @@ class LobbyManager {
             if (payload && payload.success) {
                 popupNotify({
                     title: "加入游戏成功",
-                    message: `你已成功加入 ${payload.levelID} 房间，接下来的游戏进程就不归我管了，玩的开心，朋友！`,
-                    duration: 3000,
+                    message: `已成功加入 ${payload.levelID} 房间`,
+                    duration: 1000,
                 });
                 router.push(`/game/${payload.levelID}`);
             }
@@ -26,10 +26,10 @@ class LobbyManager {
 
         bus.on("ack_leave_room", (payload: any) => {
             if (payload && payload.success) {
-                popupNotify({
+                ({
                     title: "退出游戏成功",
-                    message: `欢迎回来，朋友。想看点别的故事吗？也可以！`,
-                    duration: 3000,
+                    message: `你可以继续浏览其他房间`,
+                    duration: 1000,
                 });
                 router.push("/lobby");
             }

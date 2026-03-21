@@ -75,9 +75,9 @@ const gameStore = useGameStore();
 const accountStore = useAccountStore()
 if (!accountStore.isLoginSuccess) {
     popupNotify({
-        title: "抱歉，我不认识你",
-        message: "这位朋友，可以先登陆再进入大厅吗？我不能允许没有身份的访客进入，这是我的职责，还请谅解。",
-        duration: 3000,
+        title: "进入大厅失败",
+        message: "注意，你需要先登录",
+        duration: 1000,
     })
     router.push("/")
 } else {
@@ -101,8 +101,8 @@ const joinRoom = (levelID: string) => {
     socketClient.emit('req_join_room', { levelID })
     popupNotify({
         title: "正在加入游戏",
-        message: `我们正在联络 ${levelID} 房间的路由，只要她确认了你的身份，就能让你加入游戏房间了！`,
-        duration: 5000,
+        message: `访问 ${levelID} 房间的路由中`,
+        duration: 1000,
     })
 }
 

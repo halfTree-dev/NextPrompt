@@ -13,14 +13,14 @@ class AccountManager {
                 popupNotify({
                     title: "登录成功",
                     message: payload.message,
-                    duration: 5000,
+                    duration: 3000,
                 })
                 router.push("/lobby");
             } else {
                 popupNotify({
                     title: "登录失败",
                     message: payload.message,
-                    duration: 5000,
+                    duration: 3000,
                 });
             }
             accountStore.isLoginSuccess = payload.success;
@@ -30,9 +30,9 @@ class AccountManager {
             const accountStore = useAccountStore();
             accountStore.accountInfo = payload.accountInfo;
             popupNotify({
-                title: "账号信息已更新",
-                message: `你好，我的朋友 ${payload.accountInfo.userName}，希望你能有一个愉快的游戏体验！`,
-                duration: 5000,
+                title: "账号信息已获取",
+                message: `你的账号 ${payload.accountInfo.accountId} 被认证为 ${payload.accountInfo.userName}`,
+                duration: 3000,
             })
             localStorage.setItem("accountInfo", JSON.stringify(payload.accountInfo));
         });
