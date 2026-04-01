@@ -130,6 +130,8 @@ export class GameLevelManager {
             }
             gameLevel.broadcastGameContext();
             gameLevel.broadcastMessageContext();
+            gameLevel.checkAllReadyForNextTurnAndExecuteAdvance();
+            gameLevel.broadcastEndTurnResult();
             socket.emit('ack_leave_room', { success: true, levelID: payload.levelID });
             accountManager.cancelSocketOpLock(socket);
         });

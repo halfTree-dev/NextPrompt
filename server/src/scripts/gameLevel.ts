@@ -46,6 +46,7 @@ export class GameLevel {
 
     init() {
         accountManager.on("user_disconnected", (account : AccountRecord) => {
+            // 除了 leave_room 事件之外，玩家断线时不直接经过离开房间的流程，因此需要在这里额外处理一下玩家断线的情况
             if (this.onlineAccounts.has(account.accountId)) {
                 this.delOnlineAccount(account.accountId);
                 logger.info(`玩家 ${account.userName} 已从关卡 ${this.levelID} 下线`);
@@ -381,6 +382,10 @@ export class GameLevel {
     }
 
     checkAllReadyForNextTurnAndExecuteAdvance() : boolean {
+        if (this.onlineAccounts.size === 0) {
+            logger.info(`当前关卡 ${this.levelID} 中没有在线玩家，无法进入下一回合`);
+            return false;
+        }
         for (const accountId of this.onlineAccounts) {
             if (!this.onlineAccountsReadyForEndTurn.get(accountId)) {
                 return false;
