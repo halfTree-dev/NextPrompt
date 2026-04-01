@@ -90,6 +90,7 @@ export interface ContextMessage {
 export const useGameStore = defineStore('game', {
     state: () => ({
         gameLevelInfo: null as GameLevelInfo | null,
+        gameNodeOrderedIDs: [] as string[],
         contextMessages: [] as ContextMessage[],
         readyForEndTurn: false,
         onlineAccountsReadyForEndTurn: {} as Record<string, AccountReadyInfo>

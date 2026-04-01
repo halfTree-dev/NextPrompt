@@ -11,6 +11,15 @@
             <ul class="node-list">
                 <!-- 节点被点击时一定会触发一个互动窗口，显示进一步的详细信息 -->
                 <li class="node-item" v-for="node in myNodesList.filter(node => selectedCategory === CATEGORY_ALL || node.category === selectedCategory)" :key="node.nodeID" @click="$emit('node-click', node)">
+                    <div class="node-item-controls" @click.stop>
+                        <button class="arrow-btn arrow-up" type="button" aria-label="上移" @click="nodeMoveUp(node.nodeID, selectedCategory)"></button>
+                        <span class="menu-mark" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <button class="arrow-btn arrow-down" type="button" aria-label="下移" @click="nodeMoveDown(node.nodeID, selectedCategory)"></button>
+                    </div>
                     <div class="node-card-header">
                         <h4 class="node-title" :class="{ interactable: node.interactable === true }">{{ node.displayText }}</h4>
                         <div
@@ -43,7 +52,21 @@ const gameStore = useGameStore();
 
 defineEmits(['node-click']);
 
-const myNodesList = computed(() => gameStore.gameLevelInfo && gameStore.gameLevelInfo.nodes ? Object.values(gameStore.gameLevelInfo.nodes) : [])
+// 管理节点和类型列表
+const myNodesList = computed(() => {
+    if (!gameStore.gameLevelInfo) {
+        return [];
+    }
+    const nodeOrderedIDs = gameStore.gameNodeOrderedIDs || [];
+    const resultNodes: GameNodeInfo[] = [];
+    for (const nodeId of nodeOrderedIDs) {
+        const nodeInfo = gameStore.gameLevelInfo.nodes ? gameStore.gameLevelInfo.nodes[nodeId] : null;
+        if (nodeInfo) {
+            resultNodes.push(nodeInfo);
+        }
+    }
+    return resultNodes;
+})
 const CATEGORY_ALL = "全部";
 const myNodesListCategories = computed(() => {
     const categories: Record<string, GameNodeInfo[]> = {};
@@ -62,6 +85,57 @@ const myNodesListCategories = computed(() => {
     return categories;
 })
 const selectedCategory = ref<string>(CATEGORY_ALL)
+
+// 管理节点位置移动
+const nodeMoveUp = (nodeId: string, category: string) => {
+    if (category === CATEGORY_ALL) {
+        const index = gameStore.gameNodeOrderedIDs.findIndex((id) => id === nodeId);
+        if (index > 0) {
+            const tempNode = gameStore.gameNodeOrderedIDs[index - 1];
+            if (!tempNode || !gameStore.gameNodeOrderedIDs[index]) { return; }
+            gameStore.gameNodeOrderedIDs[index - 1] = gameStore.gameNodeOrderedIDs[index];
+            gameStore.gameNodeOrderedIDs[index] = tempNode;
+        }
+    } else {
+        const categoriedNodes = myNodesListCategories.value[category] || [];
+        const index = categoriedNodes.findIndex((node) => node.nodeID === nodeId);
+        if (index > 0) {
+            const tempNode = categoriedNodes[index - 1];
+            if (!tempNode || !categoriedNodes[index]) { return; }
+            // 在 gameStore.gameNodeOrderedIDs 中调整顺序
+            const tempNodeIndex = gameStore.gameNodeOrderedIDs.findIndex((id) => id === tempNode.nodeID);
+            const currentNodeIndex = gameStore.gameNodeOrderedIDs.findIndex((id) => id === nodeId);
+            if (tempNodeIndex < 0 || currentNodeIndex < 0) { return; }
+            gameStore.gameNodeOrderedIDs[tempNodeIndex] = nodeId;
+            gameStore.gameNodeOrderedIDs[currentNodeIndex] = tempNode.nodeID;
+        }
+    }
+}
+const nodeMoveDown = (nodeId: string, category: string) => {
+    if (category === CATEGORY_ALL) {
+        const index = gameStore.gameNodeOrderedIDs.findIndex((id) => id === nodeId);
+        if (index >= 0 && index < gameStore.gameNodeOrderedIDs.length - 1) {
+            const tempNode = gameStore.gameNodeOrderedIDs[index + 1];
+            if (!tempNode || !gameStore.gameNodeOrderedIDs[index]) { return; }
+            gameStore.gameNodeOrderedIDs[index + 1] = gameStore.gameNodeOrderedIDs[index];
+            gameStore.gameNodeOrderedIDs[index] = tempNode;
+        }
+    } else {
+        const categoriedNodes = myNodesListCategories.value[category] || [];
+        const index = categoriedNodes.findIndex((node) => node.nodeID === nodeId);
+        if (index >= 0 && index < categoriedNodes.length - 1) {
+            const tempNode = categoriedNodes[index + 1];
+            if (!tempNode || !categoriedNodes[index]) { return; }
+            // 在 gameStore.gameNodeOrderedIDs 中调整顺序
+            const tempNodeIndex = gameStore.gameNodeOrderedIDs.findIndex((id) => id === tempNode.nodeID);
+            const currentNodeIndex = gameStore.gameNodeOrderedIDs.findIndex((id) => id === nodeId);
+            if (tempNodeIndex < 0 || currentNodeIndex < 0) { return; }
+            gameStore.gameNodeOrderedIDs[tempNodeIndex] = nodeId;
+            gameStore.gameNodeOrderedIDs[currentNodeIndex] = tempNode.nodeID;
+        }
+    }
+}
+
 </script>
 
 <style lang="css" scoped>
@@ -115,7 +189,7 @@ const selectedCategory = ref<string>(CATEGORY_ALL)
     background: var(--color-panel, rgba(45, 45, 45, 0.8));
     border: 1px solid var(--color-border, #3c3c3c);
     border-radius: 0;
-    padding: 14px 16px 36px;
+    padding: 14px 16px 36px 64px;
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     position: relative;
@@ -131,6 +205,70 @@ const selectedCategory = ref<string>(CATEGORY_ALL)
     align-items: flex-start;
     gap: 12px;
     margin-bottom: 10px;
+}
+
+.node-item-controls {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 44px;
+    border-right: 1px solid var(--color-border, #3c3c3c);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.arrow-btn {
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+}
+
+.arrow-btn::before {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--color-text, #ddd);
+    border-bottom: 2px solid var(--color-text, #ddd);
+    left: 6px;
+}
+
+.arrow-up::before {
+    top: 8px;
+    transform: rotate(-135deg);
+}
+
+.arrow-down::before {
+    top: 4px;
+    transform: rotate(45deg);
+}
+
+.arrow-btn:hover::before {
+    border-color: var(--color-primary, #4caf50);
+}
+
+.menu-mark {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.menu-mark span {
+    display: block;
+    width: 14px;
+    height: 2px;
+    background: var(--color-text, #bbb);
+    opacity: 0.9;
 }
 
 .node-title {

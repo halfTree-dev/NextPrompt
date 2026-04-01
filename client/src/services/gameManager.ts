@@ -41,9 +41,24 @@ class GameManager {
             }
         });
 
+
         bus.on("evt_send_game_context", (payload: GameLevelInfo) => {
             const gameStore = useGameStore();
             gameStore.gameLevelInfo = payload;
+            if (gameStore.gameNodeOrderedIDs.length === 0) {
+                gameStore.gameNodeOrderedIDs = Object.keys(payload.nodes);
+            } else {
+                for (const nodeID of Object.keys(payload.nodes)) {
+                    if (!gameStore.gameNodeOrderedIDs.includes(nodeID)) {
+                        gameStore.gameNodeOrderedIDs.push(nodeID);
+                    }
+                }
+                for (const listedNodeID of gameStore.gameNodeOrderedIDs) {
+                    if (!payload.nodes[listedNodeID]) {
+                        gameStore.gameNodeOrderedIDs = gameStore.gameNodeOrderedIDs.filter(id => id !== listedNodeID);
+                    }
+                }
+            }
         });
 
         bus.on("evt_send_message_context", (payload: ContextMessage[]) => {

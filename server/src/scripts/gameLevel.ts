@@ -169,6 +169,7 @@ export class GameLevel {
             }
         }
         socket.emit("ack_update_input", { success: true, message: "输入更新成功" });
+        this.broadcastGameContext();
     }
 
     respondToInteract(socket: Socket, payload: { nodeID: string }) {
@@ -211,6 +212,7 @@ export class GameLevel {
             }
             node.onInteractCallback(context);
             socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
+            this.broadcastGameContext();
         } else {
             logger.warn(`节点 ${nodeID} 没有交互回调函数，无法执行交互`);
             socket.emit("ack_send_interact", { success: false, message: "节点没有交互回调函数，无法执行交互，这很可能是该故事脚本的问题，请与开发者联系！" });
