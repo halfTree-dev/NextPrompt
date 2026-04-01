@@ -5,8 +5,8 @@
             <h2 class="game-title">故事：{{ level ? level.levelName : "???" }}</h2>
             <h3 class="game-title">第 {{ level ? level.currRound : "???" }} 段落</h3>
             <div class="header-right">
-                <button class="settings-btn">设置</button>
-                <button class="menu-btn">菜单</button>
+                <button class="settings-btn" @click="openSettingModal">设置</button>
+                <button class="menu-btn" @click="openMenuModal">菜单</button>
             </div>
         </header>
 
@@ -86,6 +86,22 @@
                 </div>
             </div>
         </transition>
+
+        <transition name="modal-fade">
+            <div class="modal-overlay" v-if="showSettingModal" @click.self="closeSettingModal">
+                <div class="modal-content">
+                    <SettingWindow @close="closeSettingModal" />
+                </div>
+            </div>
+        </transition>
+
+        <transition name="modal-fade">
+            <div class="modal-overlay" v-if="showMenuModal" @click.self="closeMenuModal">
+                <div class="modal-content">
+                    <MenuWindow @close="closeMenuModal" @exit="exitToLobby" />
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 
@@ -95,7 +111,11 @@ import { useGameStore, type GameNodeInfo } from '../stores/game'
 import { useAccountStore } from '../stores/account';
 import { popupNotify } from '../services/popup';
 import { router } from '../router';
+
+import SettingWindow from '../components/SettingWindow.vue';
+import MenuWindow from '../components/MenuWindow.vue';
 import NodeList from '../components/NodeList.vue';
+
 import socketClient from '../services/socket';
 
 const gameStore = useGameStore()
@@ -155,6 +175,25 @@ const setNotPrepared = () => {
     socketClient.emit("req_end_turn", { endTurnFlag: false });
 }
 
+// 管理设置界面
+const showSettingModal = ref(false);
+const openSettingModal = () => {
+    showSettingModal.value = true;
+}
+const closeSettingModal = () => {
+    showSettingModal.value = false;
+}
+
+const showMenuModal = ref(false);
+const openMenuModal = () => {
+    showMenuModal.value = true;
+}
+const closeMenuModal = () => {
+    showMenuModal.value = false;
+}
+const exitToLobby = () => {
+    router.push("/lobby");
+}
 
 // 下面响应玩家拖动调整面板宽度的逻辑
 const screenWidth = window.innerWidth

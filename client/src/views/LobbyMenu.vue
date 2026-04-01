@@ -4,8 +4,8 @@
         <header class="lobby-header">
             <h2 class="lobby-title">故事大厅</h2>
             <div class="header-right">
-                <button class="settings-btn">设置</button>
-                <button class="refresh-btn">刷新</button>
+                <button class="settings-btn" @click="openSettingModal">设置</button>
+                <button class="refresh-btn" @click="refreshRoomList">刷新</button>
             </div>
         </header>
 
@@ -51,6 +51,15 @@
                 </div>
             </section>
         </main>
+
+        <transition name="modal-fade">
+            <div class="modal-overlay" v-if="showSettingModal" @click.self="closeSettingModal">
+                <div class="modal-content">
+                    <SettingWindow @close="closeSettingModal" />
+                </div>
+            </div>
+        </transition>
+
     </div>
 </template>
 
@@ -65,6 +74,7 @@ import { popupNotify } from '../services/popup'
 
 import { socketClient } from '../services/socket'
 import { useGameStore } from '../stores/game'
+import SettingWindow from '../components/SettingWindow.vue'
 
 const lobbyStore = useLobbyStore()
 const levels = computed(() => lobbyStore.lobbyInfo?.levels || [])
@@ -112,8 +122,27 @@ if (gameStore.gameLevelInfo) {
     socketClient.emit('req_leave_room', { levelID: levelID })
     gameStore.gameLevelInfo = null;
     gameStore.contextMessages = [];
+    popupNotify({
+        title: "已退出到大厅",
+        message: `你可以重新加入刚才的房间以继续扮演你的角色，或者选择其他房间加入`,
+        duration: 1000,
+    })
 }
 
+// 管理设置界面
+const showSettingModal = ref(false);
+const openSettingModal = () => {
+    showSettingModal.value = true;
+}
+const closeSettingModal = () => {
+    showSettingModal.value = false;
+}
+
+
+// 发送刷新请求回调
+const refreshRoomList = () => {
+    socketClient.emit('req_room_list', {})
+}
 
 // 下方部分负责拖动调整左右面板宽度的逻辑
 const screenWidth = window.innerWidth
@@ -358,5 +387,40 @@ onUnmounted(() => {
 
 .send-btn:hover {
     filter: brightness(1.1);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+.modal-content {
+    background: var(--color-panel, #2d2d2d);
+    border: 1px solid var(--color-border, #555);
+    border-radius: 0;
+    padding: 30px;
+    min-width: 45vw;
+    max-width: 70vw;
+    min-height: 35vh;
+    max-height: 75vh;
+    color: var(--color-text, #fff);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+.modal-content code {
+    display: block;
+    background: #111;
+    padding: 10px;
+    border-radius: 0;
+    margin: 15px 0;
 }
 </style>
