@@ -104,7 +104,7 @@ class AccountManager extends EventEmitter {
             return false;
         }
 
-        if (this.onlineAccounts.has(socket.id)) {
+        if (Array.from(this.onlineAccounts.values()).some(acc => acc.accountId === account.accountId)) {
             logger.warn(`用户 ${account.accountId} 已经在线了，socket=${socket.id}`);
             socketService.emitMessageToSocket(socket.id, "ack_login_result", { success: false, message: "出于某些原因，你的账号已经在一个其它终端登陆，所以我们无法为你当前的终端绑定身份。" });
             return false;

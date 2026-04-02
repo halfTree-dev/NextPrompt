@@ -7,6 +7,7 @@ import socketService from "../services/socketManager";
 import accountManager from "../services/accountManager";
 import logger from "../utils/logger";
 import { Socket } from "socket.io";
+import dataManager from "../services/dataManger";
 
 export class GameLevelManager {
     levels: Map<string, GameLevel>;
@@ -152,12 +153,22 @@ export class GameLevelManager {
         const result: LobbyInfo = {
             levels: []
         };
+        const getAccountShowLabels = (level : GameLevel) => {
+            const showLabels = [] as string[];
+            for (const accountID of level.onlineAccounts) {
+                const accountInstance = dataManager.getAccount(accountID);
+                if (accountInstance) {
+                    showLabels.push(`${accountInstance.userName}(${accountID.slice(0, 6)})`);
+                }
+            }
+            return showLabels;
+        }
         for (const level of this.levels.values()) {
             const levelInfo: LobbyLevelInfo = {
                 levelID: level.levelID,
                 levelName: level.levelName,
                 currRound: level.currRound,
-                onlineAccountNames: Array.from(level.onlineAccounts)
+                onlineAccountNames: getAccountShowLabels(level)
             };
             result.levels.push(levelInfo);
         }

@@ -13,14 +13,14 @@
             <!--接下来是房间列表显示，占用下方区域的左边部分-->
             <section class="lobby-room-list" :style="{ width: leftPanelWidth + 'px', pointerEvents: operationLock ? 'none' : 'auto', opacity: operationLock ? 0.6 : 1 }">
                 <ul class="room-list">
-                    <li class="room-item" v-for="value in levels" :key="value.levelID" @click="joinRoom(value.levelID)">
+                    <li class="room-item" v-for="value in levels" :key="value.levelID" @click="openJoinWindow(value.levelID)">
                         <div class="room-info">
                             <h4>{{ value.levelName }}</h4>
                             <p>{{ value.levelID }}</p>
                         </div>
                         <div class="room-status">
-                            <span class="status-players">{{ value.onlineAccountNames.slice(0, 3).join(', ') }} {{ value.onlineAccountNames.length > 3 ? '...' : '' }} 正在参与 </span>
-                            <span class="status-state">段落 {{ value.currRound }}</span>
+                            <span class="status-players">{{ value.onlineAccountNames.length }} 名读者正在参与 </span>
+                            <span class="status-state">进行到段落 {{ value.currRound }}</span>
                         </div>
                     </li>
                 </ul>
@@ -51,6 +51,30 @@
                 </div>
             </section>
         </main>
+
+        <transition name="modal-fade">
+            <div class="modal-overlay" v-if="showJoinWindow" @click.self="closeJoinWindow">
+                <div class="modal-content">
+                    <h3 class="model-level-title">{{ joinWindowLevelInstance?.levelName || '未知房间' }}</h3>
+                    <span class="model-level-item">
+                        <label class="form-label">房间ID</label>
+                        <label class="form-value">{{ joinWindowLevelInstance?.levelID }}</label>
+                    </span>
+                    <span class="model-level-item">
+                        <label class="form-label">当前轮数</label>
+                        <label class="form-value">{{ joinWindowLevelInstance?.currRound }}</label>
+                    </span>
+                    <span class="model-level-item">
+                        <label class="form-label">参与读者数目</label>
+                        <label class="form-value">{{ joinWindowLevelInstance?.onlineAccountNames.length || 0 }}</label>
+                    </span>
+                    <li v-for="accountName in joinWindowLevelInstance?.onlineAccountNames || []" :key="accountName" class="model-level-item">
+                        <label class="form-value">{{ accountName }}</label>
+                    </li>
+                    <button class="join-btn" @click="joinRoom(joinWindowLevelInstance?.levelID || '')">加入房间</button>
+                </div>
+            </div>
+        </transition>
 
         <transition name="modal-fade">
             <div class="modal-overlay" v-if="showSettingModal" @click.self="closeSettingModal">
@@ -107,6 +131,23 @@ const sendChatMessage = () => {
     autoResize();
 }
 
+
+// 管理房间的加入窗口弹出逻辑
+const showJoinWindow = ref(false);
+const showJoinWindowLevelID = ref("");
+const joinWindowLevelInstance = computed(() => {
+    return levels.value.find(level => level.levelID === showJoinWindowLevelID.value) || null;
+})
+const openJoinWindow = (levelID: string) => {
+    showJoinWindowLevelID.value = levelID;
+    showJoinWindow.value = true;
+};
+const closeJoinWindow = () => {
+    showJoinWindowLevelID.value = "";
+    showJoinWindow.value = false;
+}
+
+// 管理房间的加入
 const joinRoom = (levelID: string) => {
     socketClient.emit('req_join_room', { levelID })
     popupNotify({
@@ -422,5 +463,50 @@ onUnmounted(() => {
     padding: 10px;
     border-radius: 0;
     margin: 15px 0;
+}
+
+.model-level-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    color: var(--color-primary, #4caf50);
+    border-bottom: 1px solid var(--color-border, #3c3c3c);
+    gap: 20px;
+}
+.model-level-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+}
+.model-level-item:last-child {
+    border-bottom: none;
+}
+.form-label {
+    color: var(--color-text, #ccc);
+    font-size: 0.95rem;
+    flex: 1;
+    font-weight: 500;
+}
+.form-value {
+    color: var(--color-primary, #4caf50);
+    font-size: 0.95rem;
+    font-weight: bold;
+    flex: 1;
+    text-align: right;
+}
+.join-btn {
+    display: block;
+    width: 100%;
+    background: var(--color-primary, #4caf50);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 0;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+    font-weight: bold;
+    text-align: center;
 }
 </style>
