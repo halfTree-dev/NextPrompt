@@ -53,17 +53,17 @@ level.hookManager.storyInitEvent = (context) => {
         count: 1,
         interactable: false
     })
-     const revolver = level.nodeManager.createNode("revolver");
-     level.nodeManager.addNode(revolver);
+    const revolver = level.nodeManager.createNode("revolver");
+    level.nodeManager.addNode(revolver);
 
-     const bullet = level.nodeManager.createNode("bullet");
-     level.nodeManager.addNode(bullet);
+    const bullet = level.nodeManager.createNode("bullet");
+    level.nodeManager.addNode(bullet);
 
-     const otherBullets = level.nodeManager.createNode("bullet");
-     otherBullets.count = 3;
-     level.nodeManager.addNode(otherBullets);
+    const otherBullets = level.nodeManager.createNode("bullet");
+    otherBullets.count = 3;
+    level.nodeManager.addNode(otherBullets);
 
-     logger.info('Guns on the table!');
+    logger.info('Guns on the table!');
 }
 
 level.hookManager.storyAdvanceEvent = (context) => {
@@ -73,6 +73,8 @@ level.hookManager.storyAdvanceEvent = (context) => {
 level.hookManager.socketConnectEvent = (context, socket) => {
     const level = context.level;
     const logger = context.logger;
+    level.guideManager.sendGuideMessageToSocket(socket, "测试用引导消息", "这是一条测试用的引导消息，用于展示引导系统的功能。");
+    level.guideManager.sendGuideMessageToSocket(socket, "测试用引导消息2", "还有一条");
 }
 
 level.hookManager.socketDisconnectEvent = (context, socket) => {

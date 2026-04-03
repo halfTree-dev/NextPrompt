@@ -13,6 +13,7 @@ import { Attributes } from "./gameObjects/gameCharacter";
 import GameNode, { InputSlot, InputStringBar, RelatedCharacter, Tag as NodeTag } from "./gameObjects/gameNode";
 import { cloneDeep } from "lodash";
 import { Socket } from "socket.io";
+import { GuideManager } from "./managers/guideManager";
 
 export class GameLevel {
     levelID: string = "";
@@ -25,6 +26,7 @@ export class GameLevel {
     hookManager: HookManager;
     toolManager: ToolManager;
     textManager: TextManager;
+    guideManager: GuideManager;
 
     onlineAccounts: Set<string>;
     onlineAccountsReadyForEndTurn: Map<string, boolean>;
@@ -39,6 +41,7 @@ export class GameLevel {
         this.hookManager = new HookManager();
         this.toolManager = new ToolManager();
         this.textManager = new TextManager();
+        this.guideManager = new GuideManager();
 
         this.onlineAccounts = new Set();
         this.onlineAccountsReadyForEndTurn = new Map();

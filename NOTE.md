@@ -1,5 +1,8 @@
 # 路由设计
 
+## GuideMessage
+- 后端到前端：evt_send_guide_message
+
 ## AccountManager
 - 前端到后端：req_user_signup, req_user_login
 - 后端到前端：ack_login_result, evt_account_info

@@ -6,6 +6,8 @@ import type { ChatMessage, LobbyLevelInfo } from "../stores/lobby";
 import type { ContextMessage, GameLevelInfo } from "../stores/game";
 
 type SocketEvents = {
+    "evt_send_guide_message": { title: string, content: string };
+
     "ack_login_result": { success: boolean, message: string };
     "evt_account_info": { accountInfo: AccountRecordInfo };
 
@@ -52,6 +54,8 @@ class SocketClient {
         this.socket.on("disconnect", () => {
             console.log("与服务器的连接已断开");
         });
+
+        this.socket.on("evt_send_guide_message", (payload) => bus.emit("evt_send_guide_message", payload));
 
         this.socket.on("ack_login_result", (payload) => bus.emit("ack_login_result", payload));
         this.socket.on("evt_account_info", (payload) => bus.emit("evt_account_info", payload));
