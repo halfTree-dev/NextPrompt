@@ -2,11 +2,20 @@
     "port": 3000,
     "openingLevels": [
         {
-        "levelID": "test",
-        "levelName": "规则书测试",
+        "levelID": "tutorial-1",
+        "levelName": "Next Prompt 新手引导教程",
         "storyScriptLocation": [
-            "./stories/test_story.mjs"
-        ]
+            "stories/tutorial_story/tutorial_story.mjs"
+        ],
+        "roomCapacity": 1
+        },
+        {
+        "levelID": "tutorial-2",
+        "levelName": "Next Prompt 新手引导教程",
+        "storyScriptLocation": [
+            "stories/tutorial_story/tutorial_story.mjs"
+        ],
+        "roomCapacity": 1
         }
     ]
 }

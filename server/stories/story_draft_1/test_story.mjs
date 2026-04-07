@@ -1,5 +1,4 @@
 /* @ts-check */
-/// <reference path="./story-env.d.ts" />
 
 level.hookManager.storyInitEvent = (context) => {
     const level = context.level;

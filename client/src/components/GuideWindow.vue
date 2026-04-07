@@ -37,7 +37,7 @@ const selectNextGuide = () => {
 
 const selectNextGuideAndHide = () => {
     guideStore.guideInfos.splice(guideStore.currentGuideIndex, 1);
-    guideStore.currentGuideIndex = Math.min(guideStore.currentGuideIndex, guideStore.guideInfos.length - 1);
+    guideStore.currentGuideIndex = Math.max(0, Math.min(guideStore.currentGuideIndex, guideStore.guideInfos.length - 1));
     guideManager.updateGuideInfos();
 };
 
