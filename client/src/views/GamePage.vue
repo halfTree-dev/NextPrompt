@@ -112,9 +112,9 @@ import { useAccountStore } from '../stores/account';
 import { popupNotify } from '../services/popup';
 import { router } from '../router';
 
-import SettingWindow from '../components/SettingWindow.vue';
-import MenuWindow from '../components/MenuWindow.vue';
-import NodeList from '../components/NodeList.vue';
+import SettingWindow from '../components/windows/SettingWindow.vue';
+import MenuWindow from '../components/windows/MenuWindow.vue';
+import NodeList from '../components/gamings/NodeList.vue';
 
 import socketClient from '../services/socket';
 
@@ -243,7 +243,7 @@ onUnmounted(() => {
     stopResize()
 })
 
-import NodeInteract from '../components/NodeInteract.vue';
+import NodeInteract from '../components/gamings/NodeInteract.vue';
 const showModal = ref(false);
 const activeNodeId = ref<string>("");
 const activeNode = ref<GameNodeInfo | null>(null);

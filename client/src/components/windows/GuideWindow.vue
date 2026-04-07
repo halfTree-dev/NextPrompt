@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useGuideStore } from '../stores/guide';
-import guideManager from '../services/guide';
+import { useGuideStore } from '../../stores/guide';
+import guideManager from '../../services/guide';
 
 const guideStore = useGuideStore();
 

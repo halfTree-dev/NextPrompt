@@ -65,8 +65,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useAccountStore } from '../stores/account';
-import { useStyleStore } from '../stores/style'
+import { useAccountStore } from '../../stores/account';
+import { useStyleStore } from '../../stores/style'
 
 const accountStore = useAccountStore();
 const styleStore = useStyleStore();

@@ -1,6 +1,6 @@
 import { createVNode, render } from "vue";
 import { useGuideStore, type GuideInfo } from "../stores/guide";
-import GuideWindow from "../components/GuideWindow.vue";
+import GuideWindow from "../components/windows/GuideWindow.vue";
 import { bus } from "./socket";
 
 class GuideManager {

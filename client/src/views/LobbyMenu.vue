@@ -98,7 +98,7 @@ import { popupNotify } from '../services/popup'
 
 import { socketClient } from '../services/socket'
 import { useGameStore } from '../stores/game'
-import SettingWindow from '../components/SettingWindow.vue'
+import SettingWindow from '../components/windows/SettingWindow.vue'
 
 const lobbyStore = useLobbyStore()
 const levels = computed(() => lobbyStore.lobbyInfo?.levels || [])

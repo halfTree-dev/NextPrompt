@@ -72,9 +72,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useGameStore, type GameNodeInfo } from '../stores/game';
+import { useGameStore, type GameNodeInfo } from '../../stores/game';
 import NodeList from './NodeList.vue';
-import socketClient from '../services/socket';
+import socketClient from '../../services/socket';
 
 const gameStore = useGameStore();
 

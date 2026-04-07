@@ -1,6 +1,6 @@
 import { createVNode, render } from 'vue';
-import NotifyPopup from '../components/NotifyPopup.vue';
-import AlertPopup from '../components/AlertPopup.vue';
+import NotifyPopup from '../components/popups/NotifyPopup.vue';
+import AlertPopup from '../components/popups/AlertPopup.vue';
 
 let alertZIndex = 9000;
 
