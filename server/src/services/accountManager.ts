@@ -8,6 +8,16 @@ import socketService from "./socketManager";
 import dataManager from "./dataManger";
 import logger from "../utils/logger";
 
+export interface AccountRecordInfo {
+    // 记录账号基本信息
+    accountId: string;
+    userName: string;
+    // 记录玩家数据
+    createdAt: number;
+    spawnedWordsCnt: number; // 玩家阅读过的文本词汇数量
+    usedTokens: number; // 玩家参与游戏中的 Token 消耗总数
+}
+
 class AccountManager extends EventEmitter {
     onlineAccounts: Map<string, AccountRecord>;
     socketsOperationLocks: Map<string, boolean>;
@@ -39,16 +49,7 @@ class AccountManager extends EventEmitter {
         return this.onlineAccounts.get(socket.id);
     }
 
-    getAccountInfoForClient(account: AccountRecord) {
-        interface AccountRecordInfo {
-            // 记录账号基本信息
-            accountId: string;
-            userName: string;
-            // 记录玩家数据
-            createdAt: number;
-            spawnedWordsCnt: number; // 玩家阅读过的文本词汇数量
-            usedTokens: number; // 玩家参与游戏中的 Token 消耗总数
-        }
+    getAccountInfoForClient(account: AccountRecord): AccountRecordInfo {
         const result: AccountRecordInfo = {
             accountId: account.accountId,
             userName: account.userName,

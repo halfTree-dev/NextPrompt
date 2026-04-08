@@ -1,9 +1,12 @@
-level.hookManager.storyInitEvent = (context) => {
+/** @typedef {import('../../types/scripts/managers/toolManager').ToolContext} ToolContext */
+/** @typedef {import('../../types/services/dataManger').AccountRecord} AccountRecord */
+
+level.hookManager.storyInitEvent = (/** @type {ToolContext} */ context) => {
     const level = context.level;
     const logger = context.logger;
 }
 
-level.hookManager.storyAdvanceEvent = (context) => {
+level.hookManager.storyAdvanceEvent = (/** @type {ToolContext} */ context) => {
     const level = context.level;
     const logger = context.logger;
     if (level.currRound === 1) {
@@ -34,7 +37,10 @@ level.hookManager.storyAdvanceEvent = (context) => {
     }
 }
 
-level.hookManager.playerConnectEvent = (context, account) => {
+level.hookManager.playerConnectEvent = (
+    /** @type {ToolContext} */ context,
+    /** @type {AccountRecord} */ account
+) => {
     const level = context.level;
     const logger = context.logger;
     level.guideManager.sendGuideMessageToAccount(level, account, "欢迎！",
@@ -45,26 +51,37 @@ level.hookManager.playerConnectEvent = (context, account) => {
         要结束目前的回合，点击操作界面的左下角的准备结束回合按钮。现在尝试结束本段落以继续教程。`);
 }
 
-level.hookManager.playerDisconnectEvent = (context, account) => {
+level.hookManager.playerDisconnectEvent = (
+    /** @type {ToolContext} */ context,
+    /** @type {AccountRecord} */ account
+) => {
+    const level = context.level;
+    const logger = context.logger;
     level.currRound = 0;
     level.nodeManager.nodes.clear();
 }
 
-readyTimes = 10;
-level.hookManager.playerSetReadyEvent = (context, account) => {
+let readyTimes = 4;
+level.hookManager.playerSetReadyEvent = (
+    /** @type {ToolContext} */ context,
+    /** @type {AccountRecord} */ account
+) => {
     const level = context.level;
     const logger = context.logger;
     if (readyTimes > 0) {
         level.hookManager.playerSetReadyStatus(context, account, false);
-        level.textManager.sendNotifyToAccount(level, account, "测试", `不让你准备！除非你再准备${readyTimes}次了！`);
+        level.textManager.sendNotifyToAccount(level, account, "测试取消准备", `应当再准备 ${readyTimes} 次`);
         readyTimes--;
     }
     else {
-        level.guideManager.sendNotifyToAccount(level, account, "准备结束回合", "你真闲啊");
+        level.textManager.sendNotifyToAccount(level, account, "准备结束回合", "你真闲啊");
     }
 }
 
-level.hookManager.playerSetUnreadyEvent = (context, account) => {
+level.hookManager.playerSetUnreadyEvent = (
+    /** @type {ToolContext} */ context,
+    /** @type {AccountRecord} */ account
+) => {
     const level = context.level;
     const logger = context.logger;
 }

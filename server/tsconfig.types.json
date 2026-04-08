@@ -6,6 +6,8 @@
     "outDir": "stories/types",
     "rootDir": "src",
     "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "module": "ESNext",
     "target": "ES2020",
     "moduleResolution": "Node",

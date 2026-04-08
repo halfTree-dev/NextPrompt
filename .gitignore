@@ -17,3 +17,4 @@ public/css/*.map
 public/js/*.map
 apikey.txt
 *.bkp
+types/

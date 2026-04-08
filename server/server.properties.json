@@ -5,7 +5,7 @@
         "levelID": "tutorial-1",
         "levelName": "Next Prompt 新手引导教程",
         "storyScriptLocation": [
-            "stories/tutorial_story/tutorial_story.mjs"
+            "stories/tutorial-story/main.mjs"
         ],
         "roomCapacity": 1
         },
@@ -13,7 +13,7 @@
         "levelID": "tutorial-2",
         "levelName": "Next Prompt 新手引导教程",
         "storyScriptLocation": [
-            "stories/tutorial_story/tutorial_story.mjs"
+            "stories/tutorial-story/main.mjs"
         ],
         "roomCapacity": 1
         }
