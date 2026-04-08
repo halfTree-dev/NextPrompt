@@ -2,7 +2,6 @@ import { useAccountStore } from "../stores/account";
 import { popupNotify } from "./popup";
 import { bus } from "./socket";
 import { router } from "../router";
-import { doTitleLeadinEffect } from "./effect";
 
 class AccountManager {
     constructor() {}
@@ -17,12 +16,6 @@ class AccountManager {
                     duration: 3000,
                 })
                 router.push("/lobby");
-                doTitleLeadinEffect({
-                    title: "测试标题",
-                    subtitle: "测试副标题",
-                    textDuration: 2500,
-                    transitionDuration: 1200,
-                })
             } else {
                 popupNotify({
                     title: "登录失败",

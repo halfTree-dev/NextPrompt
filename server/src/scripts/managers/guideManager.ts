@@ -11,12 +11,6 @@ export class GuideManager {
         }
     };
 
-    public sendGuideMessageToSocket: (socket: Socket, title: string, message: string) => void =
-    (socket: Socket, title: string, message: string) => {
-        if (!socket) { return; }
-        socket.emit("evt_send_guide_message", { title, content: message });
-    }
-
     public sendGuideMessageToLevel: (level: GameLevel, title: string, message: string) => void =
     (level: GameLevel, title: string, message: string) => {
         level.onlineAccounts.forEach(accountId => {

@@ -234,13 +234,27 @@ export class GameLevel {
             return;
         }
         if (payload.endTurnFlag) {
-            this.onlineAccountsReadyForEndTurn.set(account.accountId, true);
+            this.hookManager.playerSetReadyStatus({ level: this, logger: logger }, account, true);
             logger.info(`玩家 ${account.userName} 已准备好结束回合`);
+            if (this.hookManager.playerSetReadyEvent) {
+                const context = {
+                    level: this,
+                    logger: logger,
+                }
+                this.hookManager.playerSetReadyEvent(context, account);
+            }
             this.checkAllReadyForNextTurnAndExecuteAdvance();
             this.broadcastEndTurnResult();
         } else {
-            this.onlineAccountsReadyForEndTurn.set(account.accountId, false);
+            this.hookManager.playerSetReadyStatus({ level: this, logger: logger }, account, false);
             logger.info(`玩家 ${account.userName} 取消了结束回合的准备`);
+            if (this.hookManager.playerSetUnreadyEvent) {
+                const context = {
+                    level: this,
+                    logger: logger,
+                }
+                this.hookManager.playerSetUnreadyEvent(context, account);
+            }
             this.broadcastEndTurnResult();
         }
     }

@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "src/app.js",
   "scripts": {
-    "dev": "ts-node src/app.ts"
+    "dev": "ts-node src/app.ts",
+    "build:types": "tsc -p tsconfig.types.json"
   },
   "keywords": [],
   "author": "",

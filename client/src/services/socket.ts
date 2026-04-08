@@ -26,7 +26,7 @@ type SocketEvents = {
 
     "evt_send_notify": { title: string, message: string, duration?: number };
     "evt_send_alert": { title: string, message: string };
-    "evt_send_effect": any;
+    "evt_send_title_lead_in": { title: string, subtitle: string, textDuration?: number, transitionDuration?: number };
 
     "ack_end_turn": { flag: boolean, message: string };
     "evt_end_turn_result": { onlineAccountsReadyForEndTurn: Record<string, boolean> };
@@ -75,7 +75,7 @@ class SocketClient {
 
         this.socket.on("evt_send_notify", (payload) => bus.emit("evt_send_notify", payload));
         this.socket.on("evt_send_alert", (payload) => bus.emit("evt_send_alert", payload));
-        this.socket.on("evt_send_effect", (payload) => bus.emit("evt_send_effect", payload));
+        this.socket.on("evt_send_title_lead_in", (payload) => bus.emit("evt_send_title_lead_in", payload));
 
         this.socket.on("ack_end_turn", (payload) => bus.emit("ack_end_turn", payload));
         this.socket.on("evt_end_turn_result", (payload) => bus.emit("evt_end_turn_result", payload));

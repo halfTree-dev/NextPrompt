@@ -113,11 +113,11 @@ onBeforeUnmount(() => {
     left: 50%;
     width: 160vw;
     height: 24vh;
-    border-top: 2px solid rgba(255, 255, 255, 0.35);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+    border-top: 2px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
     border-left: 1px solid rgba(255, 255, 255, 0.18);
     border-right: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(0, 0, 0, 0.54);
+    background: rgba(0, 0, 0, 0.25);
     transform: translate(calc(-50% + var(--slide-x)), -50%) skewX(var(--effect-angle));
     transition: transform var(--effect-move-duration) cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;

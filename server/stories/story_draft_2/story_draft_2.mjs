@@ -1,4 +1,4 @@
-/* @ts-check */
+
 
 level.hookManager.storyInitEvent = (context) => {
     const level = context.level;
@@ -10,12 +10,23 @@ level.hookManager.storyAdvanceEvent = (context) => {
     const logger = context.logger;
 }
 
-level.hookManager.socketConnectEvent = (context, socket) => {
+level.hookManager.playerConnectEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
 }
 
-level.hookManager.socketDisconnectEvent = (context, socket) => {
+level.hookManager.playerDisconnectEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
+}
+
+level.hookManager.playerSetReadyEvent = (context, account) => {
+    const level = context.level;
+    const logger = context.logger;
+}
+
+level.hookManager.playerSetUnreadyEvent = (context, account) => {
+    const level = context.level;
+    const logger = context.logger;
+
 }

@@ -1,4 +1,6 @@
+import { useAccountStore } from "../stores/account";
 import { useGameStore, type ContextMessage, type GameLevelInfo } from "../stores/game";
+import { doTitleLeadinEffect } from "./effect";
 import { popupAlert, popupNotify } from "./popup";
 import { bus } from "./socket";
 
@@ -96,9 +98,15 @@ class GameManager {
             }
         });
 
-        bus.on("evt_send_effect", (payload: any) => {
-            console.log("收到游戏效果:", payload);
-            // TODO: 根据效果类型和内容，更新游戏状态或界面
+        bus.on("evt_send_title_lead_in", (payload: any) => {
+            if (payload && payload.title && payload.subtitle) {
+                doTitleLeadinEffect({
+                    title: payload.title,
+                    subtitle: payload.subtitle,
+                    textDuration: payload.textDuration,
+                    transitionDuration: payload.transitionDuration
+                });
+            }
         });
 
         bus.on("ack_end_turn", (payload: any) => {
@@ -121,6 +129,12 @@ class GameManager {
         bus.on("evt_end_turn_result", (payload: any) => {
             const gameStore = useGameStore();
             gameStore.onlineAccountsReadyForEndTurn = payload.onlineAccountsReadyForEndTurn;
+
+            const accountStore = useAccountStore();
+            const myAccountID = accountStore.accountInfo?.accountId;
+            if (myAccountID && gameStore.onlineAccountsReadyForEndTurn.hasOwnProperty(myAccountID)) {
+                gameStore.readyForEndTurn = gameStore.onlineAccountsReadyForEndTurn[myAccountID]?.readyForEndTurn || false;
+            }
         });
 
     }

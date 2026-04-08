@@ -1,5 +1,3 @@
-/* @ts-check */
-
 level.hookManager.storyInitEvent = (context) => {
     const level = context.level;
     const logger = context.logger;
@@ -36,18 +34,37 @@ level.hookManager.storyAdvanceEvent = (context) => {
     }
 }
 
-level.hookManager.socketConnectEvent = (context, socket) => {
+level.hookManager.playerConnectEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
-    level.guideManager.sendGuideMessageToSocket(socket, "欢迎！",
+    level.guideManager.sendGuideMessageToAccount(level, account, "欢迎！",
         `Next Prompt 是一个在线文字冒险游戏，其游戏剧情和其它部分要素由 LLM 实时生成。本教程旨在帮助你快速了解游戏的基本玩法和界面。
         本部分区域是引导栏，它会指导你进行接下来的操作；按下下一条来查看接下来的引导信息。`);
-    level.guideManager.sendGuideMessageToSocket(socket, "回合制游戏",
+    level.guideManager.sendGuideMessageToAccount(level, account, "回合制游戏",
         `作为文字冒险游戏，剧情文本的推进是回合制的，每个回合被称作一个“段落”，推进到新的段落一般会伴随着剧情文本的更新；
         要结束目前的回合，点击操作界面的左下角的准备结束回合按钮。现在尝试结束本段落以继续教程。`);
 }
 
-level.hookManager.socketDisconnectEvent = (context, socket) => {
+level.hookManager.playerDisconnectEvent = (context, account) => {
     level.currRound = 0;
     level.nodeManager.nodes.clear();
+}
+
+readyTimes = 10;
+level.hookManager.playerSetReadyEvent = (context, account) => {
+    const level = context.level;
+    const logger = context.logger;
+    if (readyTimes > 0) {
+        level.hookManager.playerSetReadyStatus(context, account, false);
+        level.textManager.sendNotifyToAccount(level, account, "测试", `不让你准备！除非你再准备${readyTimes}次了！`);
+        readyTimes--;
+    }
+    else {
+        level.guideManager.sendNotifyToAccount(level, account, "准备结束回合", "你真闲啊");
+    }
+}
+
+level.hookManager.playerSetUnreadyEvent = (context, account) => {
+    const level = context.level;
+    const logger = context.logger;
 }
