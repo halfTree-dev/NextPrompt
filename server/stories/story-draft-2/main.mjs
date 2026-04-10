@@ -1,44 +1,33 @@
-/** @typedef {import('../../types/scripts/managers/toolManager').ToolContext} ToolContext */
-/** @typedef {import('../../types/services/dataManger').AccountRecord} AccountRecord */
-
-level.hookManager.storyInitEvent = (/** @type {ToolContext} */ context) => {
+data["status"] = {
+    stageStatus: "prepare",
+};
+level.hookManager.storyInitEvent = (context) => {
     const level = context.level;
     const logger = context.logger;
-}
-
-level.hookManager.storyAdvanceEvent = (/** @type {ToolContext} */ context) => {
+    data["status"]["stageStatus"] = "prepare";
+};
+level.hookManager.storyAdvanceEvent = (context) => {
     const level = context.level;
     const logger = context.logger;
-}
-
-level.hookManager.playerConnectEvent = (
-    /** @type {ToolContext} */ context,
-    /** @type {AccountRecord} */ account
-) => {
+};
+level.hookManager.playerConnectEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
-}
-
-level.hookManager.playerDisconnectEvent = (
-    /** @type {ToolContext} */ context,
-    /** @type {AccountRecord} */ account
-) => {
+    if (data["status"]["stageStatus"] === "prepare") {
+        level.textManager.sendTitleLeadInToAccount(level, account, data["texts"]["prepareStageTitle"], data["texts"]["prepareStageSubtitle"]);
+        level.textManager.sendAlertToAccount(level, account, data["texts"]["preludeTitle"], data["texts"]["prelude"]);
+        level.textManager.sendAlertToAccount(level, account, data["texts"]["preludeTitle"], data["texts"]["prepareStageDescription"]);
+    }
+};
+level.hookManager.playerDisconnectEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
-}
-
-level.hookManager.playerSetReadyEvent = (
-    /** @type {ToolContext} */ context,
-    /** @type {AccountRecord} */ account
-) => {
+};
+level.hookManager.playerSetReadyEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
-}
-
-level.hookManager.playerSetUnreadyEvent = (
-    /** @type {ToolContext} */ context,
-    /** @type {AccountRecord} */ account
-) => {
+};
+level.hookManager.playerSetUnreadyEvent = (context, account) => {
     const level = context.level;
     const logger = context.logger;
-}
+};

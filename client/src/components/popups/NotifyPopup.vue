@@ -57,6 +57,7 @@ onMounted(() => {
     line-height: 1.4;
     opacity: 0.9;
     text-align: left;
+    white-space: pre-wrap;
 }
 
 .notify-slide-enter-active,

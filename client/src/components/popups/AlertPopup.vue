@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useGameStore } from '../../stores/game';
 
 const props = defineProps<{
     title: string
@@ -30,7 +31,18 @@ onMounted(() => {
 })
 
 const close = () => {
+    sendAlertToContextMessage();
     visible.value = false
+}
+
+const sendAlertToContextMessage = () => {
+    const gameStore = useGameStore();
+    gameStore.contextMessages.push({
+        sender: props.title,
+        content: props.message,
+        timestamp: Date.now(),
+        sendType: 'system'
+    })
 }
 </script>
 
@@ -76,6 +88,7 @@ const close = () => {
     opacity: 0.9;
     flex: 1;
     overflow-y: auto;
+    white-space: pre-wrap;
 }
 
 .alert-actions {
