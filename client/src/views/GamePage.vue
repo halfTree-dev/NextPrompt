@@ -65,7 +65,7 @@
         <transition name="modal-fade">
             <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
                 <div class="modal-content">
-                    <NodeInteract v-if="activeNode" :node="activeNode" />
+                    <NodeInteract v-if="activeNode" :node="activeNode" @close="closeModal" />
                 </div>
             </div>
         </transition>
@@ -138,11 +138,11 @@ const myAccount = computed(() => accountStore.accountInfo)
 
 const myCharacter = computed(() => {
     if (!level.value || !myAccount.value || !level.value.characters) return null
-    return level.value.characters[myAccount.value.accountId] || null
+    return Object.values(level.value.characters).find(character => character.accountRecord?.accountId === myAccount.value?.accountId) || null
 })
 const myAttributesList = computed(() => {
-    if (!myCharacter.value) return []
-    return Array.from(myCharacter.value.attributes.entries()).map(([name, value]) => ({ name, value }))
+    if (!myCharacter || !myCharacter.value) return []
+    return Object.entries(myCharacter.value.attributes).map(([name, value]) => ({ name, value }));
 })
 
 

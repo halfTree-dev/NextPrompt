@@ -30,6 +30,10 @@ export class StoryLoader {
             String: String,
             Number: Number,
             Boolean: Boolean,
+            setTimeout: setTimeout,
+            clearTimeout: clearTimeout,
+            setInterval: setInterval,
+            clearInterval: clearInterval,
         });
 
         this.levelContexts.set(gameLevel.levelID, levelContext);

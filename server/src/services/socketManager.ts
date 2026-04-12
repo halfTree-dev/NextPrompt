@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { EventEmitter } from "events";
 import logger from "../utils/logger";
-import { InputSlot, InputStringBar } from "../scripts/gameObjects/gameNode";
+import { InputCheckbox, InputSlot, InputStringBar } from "../scripts/gameObjects/gameNode";
 import accountManager from "./accountManager";
 
 class SocketService extends EventEmitter {
@@ -62,7 +62,7 @@ class SocketService extends EventEmitter {
                 this.emit("req_chat_history", socket, payload);
             });
 
-            socket.on("req_update_input", (payload: { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
+            socket.on("req_update_input", (payload: { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar>; inputCheckboxes: Record<string, InputCheckbox> }) => {
                 if (accountManager.getSocketOpLock(socket)) { return; }
                 accountManager.setSocketOpLock(socket);
                 this.emit("req_update_input", socket, payload);

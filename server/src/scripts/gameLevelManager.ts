@@ -18,7 +18,7 @@ export class GameLevelManager {
         this.chatMessages = [];
     }
 
-    init() {
+    async init() {
         const levelConfig = configManager.openingLevels;
         if (!levelConfig || levelConfig.length === 0) { return; }
         for (const config of levelConfig) {
@@ -28,7 +28,7 @@ export class GameLevelManager {
                 storyLoader.loadStoryScript(scriptPath, newLevel);
             }
             newLevel.init();
-            newLevel.hookManager.storyInitEvent?.({ level: newLevel, logger: logger });
+            await Promise.resolve(newLevel.hookManager.storyInitEvent?.({ level: newLevel, logger: logger }));
             this.levels.set(config.levelID, newLevel);
         }
 
@@ -64,7 +64,7 @@ export class GameLevelManager {
             accountManager.cancelSocketOpLock(socket);
         });
 
-        socketService.on('req_join_room', (socket : Socket, payload) => {
+        socketService.on('req_join_room', async (socket : Socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
                 socket.emit('evt_send_alert', { title: "收到未登录用户的请求", message: "在未登录情况下，无法加入游戏房间" });
@@ -99,7 +99,7 @@ export class GameLevelManager {
                     level: gameLevel,
                     logger: logger,
                 }
-                gameLevel.hookManager.playerConnectEvent(context, account);
+                await Promise.resolve(gameLevel.hookManager.playerConnectEvent(context, account));
             }
             gameLevel.broadcastGameContext();
             gameLevel.broadcastMessageContext();
@@ -108,7 +108,7 @@ export class GameLevelManager {
             accountManager.cancelSocketOpLock(socket);
         });
 
-        socketService.on('req_leave_room', (socket : Socket, payload) => {
+        socketService.on('req_leave_room', async (socket : Socket, payload) => {
             const account = accountManager.findAccountBySocket(socket);
             if (!account) {
                 accountManager.cancelSocketOpLock(socket);
@@ -127,11 +127,11 @@ export class GameLevelManager {
                     level: gameLevel,
                     logger: logger,
                 }
-                gameLevel.hookManager.playerDisconnectEvent(context, account);
+                await Promise.resolve(gameLevel.hookManager.playerDisconnectEvent(context, account));
             }
             gameLevel.broadcastGameContext();
             gameLevel.broadcastMessageContext();
-            gameLevel.checkAllReadyForNextTurnAndExecuteAdvance();
+            await gameLevel.checkAllReadyForNextTurnAndExecuteAdvance();
             gameLevel.broadcastEndTurnResult();
             socket.emit('ack_leave_room', { success: true, levelID: payload.levelID });
             accountManager.cancelSocketOpLock(socket);

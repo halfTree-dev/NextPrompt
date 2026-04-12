@@ -63,8 +63,36 @@ export class NodeManager {
         }
     }
 
+    addRelatedCharacterToNode(nodeID: string, characterID: string): void {
+        const node = this.nodes.get(nodeID);
+        if (!node) {
+            console.warn(`Node with ID "${nodeID}" not found.`);
+            return;
+        }
+        if (!node.relatedCharacters.some(rc => rc.characterID === characterID)) {
+            node.relatedCharacters.push({ characterID });
+        }
+    }
+
+    deleteRelatedCharacterFromNode(nodeID: string, characterID: string): void {
+        const node = this.nodes.get(nodeID);
+        if (!node) {
+            console.warn(`Node with ID "${nodeID}" not found.`);
+            return;
+        }
+        node.relatedCharacters = node.relatedCharacters.filter(rc => rc.characterID !== characterID);
+    }
+
     public getNode(nodeID: string): GameNode | undefined {
         return this.nodes.get(nodeID);
+    }
+
+    public getNodesMap(): Map<string, GameNode> {
+        return this.nodes;
+    }
+
+    public clearNodes(): void {
+        this.nodes.clear();
     }
 
 }

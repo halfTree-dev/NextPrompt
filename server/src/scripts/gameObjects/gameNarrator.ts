@@ -61,7 +61,6 @@ export class GameNarrator {
     storyStorage: StorageItem[] = [];
 
     narratorProfile: string = "";
-    triggerPrompt: string = "";
 
     apiKey: string = "";
 
@@ -69,20 +68,26 @@ export class GameNarrator {
 
     loadLLMAPIKey(): void {
         this.apiKey = process.env.BIGMODEL_API_KEY || "";
+        logger.info('Narrator API Key 已加载');
     }
 
-    storage(source: string, content: string): void {
+    setNarratorProfile(profile: string): void {
+        this.narratorProfile = profile;
+    }
+
+    addStorageMessage(source: string, content: string): void {
         const prompt: StorageItem = { source, content };
         this.storyStorage.push(prompt);
     }
 
     async sendTriggerMessage(
+        commandPrompt: string,
         context: Record<string, any>,
         LLMtools: ToolSchema[] = [],
     ): Promise<ChatGLMResponse | null> {
         let systemContent = this.narratorProfile || '';
-        if (this.triggerPrompt) {
-            systemContent += `\n\n[Instruction]\n${this.triggerPrompt}`;
+        if (commandPrompt) {
+            systemContent += `\n\n[Instruction]\n${commandPrompt}`;
         }
 
         const storageList = Array.isArray(this.storyStorage) ? this.storyStorage : [];
@@ -101,7 +106,7 @@ export class GameNarrator {
         LLMtools: ToolSchema[] = []
     ): Promise<ChatGLMResponse | null> {
         const content = {
-                model: 'glm-4.6',
+                model: 'glm-4.7',
                 messages: [
                     {
                         role: 'system',
@@ -137,11 +142,17 @@ export class GameNarrator {
 
         try {
             const result = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', options);
-            const data = await result.json() as ChatGLMResponse;
-            logger.debug('Narrator GLM Response', data);
-            return data;
+            const data = await result.json();
+            if (data && data.error) {
+                logger.error('Narrator GLM 返回错误：', data.error);
+                return null;
+            } else {
+                const result = data as ChatGLMResponse;
+                logger.debug('Narrator GLM 返回以下回复：', result);
+                return result;
+            }
         } catch (error) {
-            logger.error('Narrator GLM Error', error);
+            logger.error('Narrator GLM 的请求失败：', error);
             return null;
         }
     }

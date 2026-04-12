@@ -8,6 +8,14 @@ export class CharacterManager {
         this.characters = new Map();
     }
 
+    registerCharacterInstance(characterName: string, characterDescription: string): GameCharacter {
+        const newCharacter = new GameCharacter();
+        newCharacter.characterID = `char_${Date.now()}`;
+        newCharacter.characterName = characterName;
+        newCharacter.characterDescription = characterDescription;
+        return newCharacter;
+    }
+
     addCharacter(character: GameCharacter): void {
         this.characters.set(character.characterID, character);
     }
@@ -18,6 +26,19 @@ export class CharacterManager {
 
     getCharacter(characterID: string): GameCharacter | undefined {
         return this.characters.get(characterID);
+    }
+
+    getCharacterByAccount(accountId: string): GameCharacter | undefined {
+        for (const character of this.characters.values()) {
+            if (character.accountRecord?.accountId === accountId) {
+                return character;
+            }
+        }
+        return undefined;
+    }
+
+    getCharactersMap() : Map<string, GameCharacter> {
+        return this.characters;
     }
 
     attachAccountToCharacter(characterID: string, accountRecord: AccountRecord): void {

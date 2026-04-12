@@ -22,7 +22,9 @@
         "levelName": "测试剧本",
         "storyScriptLocation": [
             "stories/story-draft-2/main.mjs",
-            "stories/story-draft-2/narratage.mjs"
+            "stories/story-draft-2/narratage.mjs",
+            "stories/story-draft-2/nodes.mjs",
+            "stories/story-draft-2/tools.mjs"
         ],
         "roomCapacity": 1
         }
