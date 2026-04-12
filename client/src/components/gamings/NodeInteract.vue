@@ -43,6 +43,22 @@
 			</ul>
 		</div>
 
+		<!-- 多选输入框 -->
+		<div class="node-section" v-if="nodeInputCheckboxes && Object.keys(nodeInputCheckboxes).length">
+			<div class="section-label">选项输入</div>
+			<ul class="node-list">
+				<li class="node-list-item" v-for="inputBox in nodeInputCheckboxes" :key="inputBox.boxID">
+					<span class="item-title">{{ inputBox.inputHint }}</span>
+					<select
+						class="input-checkbox-select"
+						v-model.number="inputBox.chooseIndex"
+						@change="handleEditInputCheckbox(inputBox.boxID, inputBox.chooseIndex)">
+						<option v-for="(choice, idx) in inputBox.choices" :key="`${inputBox.boxID}-${idx}`" :value="idx">{{ choice }}</option>
+					</select>
+				</li>
+			</ul>
+		</div>
+
 		<div class="node-actions">
 			<button class="btn-primary" v-if="node.interactable" @click="sendReqInteract">以当前设置执行交互</button>
 		</div>
@@ -75,10 +91,13 @@ import { computed, ref } from 'vue';
 import { useGameStore, type GameNodeInfo } from '../../stores/game';
 import NodeList from './NodeList.vue';
 import socketClient from '../../services/socket';
+import { popupNotify } from '../../services/popup';
 
 const gameStore = useGameStore();
 
 const props = defineProps<{ node: GameNodeInfo }>();
+const emit = defineEmits<{ close: [] }>();
+
 const node = props.node;
 
 const nodeInStore = computed(() => {
@@ -87,6 +106,7 @@ const nodeInStore = computed(() => {
 });
 const nodeInputSlots = computed(() => nodeInStore.value ? nodeInStore.value.inputSlots || {} : {});
 const nodeInputStringBars = computed(() => nodeInStore.value ? nodeInStore.value.inputStringBars || {} : {});
+const nodeInputCheckboxes = computed(() => nodeInStore.value ? nodeInStore.value.inputCheckboxes || {} : {});
 
 const showNodeSelectList = ref(false);
 const processInputSlotID = ref<string>("");
@@ -137,11 +157,22 @@ const closeInputStringBarEdit = () => {
 	currentEditingStringBarID.value = "";
 };
 
+const handleEditInputCheckbox = (boxID: string, chooseIndex: number) => {
+	if (nodeInStore.value && nodeInStore.value.inputCheckboxes) {
+		const targetBox = nodeInStore.value.inputCheckboxes[boxID];
+		if (targetBox) {
+			targetBox.chooseIndex = chooseIndex;
+		}
+		sendReqUpdateInput();
+	}
+};
+
 const sendReqUpdateInput = () => {
 	const payload = {
 		nodeID: node.nodeID,
 		inputSlots: nodeInputSlots.value,
 		inputStringBars: nodeInputStringBars.value,
+		inputCheckboxes: nodeInputCheckboxes.value,
 	}
 	socketClient.emit("req_update_input", payload);
 }
@@ -156,6 +187,16 @@ const sendReqInteract = () => {
 	processInputSlotID.value = "";
 	currentEditingStringBarID.value = "";
 	currentEditingStringBarContent.value = "";
+	popupNotify({
+		title: "交互已发送",
+		message: "等待服务器叙事者响应",
+		duration: 1000
+	})
+	closeInteractModel();
+}
+
+const closeInteractModel = () => {
+	emit("close");
 }
 
 </script>
@@ -212,6 +253,7 @@ const sendReqInteract = () => {
 .node-desc {
 	font-size: 0.98rem;
 	color: var(--color-text, #e0e0e0);
+    white-space: pre-wrap;
 }
 
 .node-tags {
@@ -284,6 +326,20 @@ const sendReqInteract = () => {
 }
 .input-string-bar-edit:focus {
 	border-bottom-color: var(--color-primary, #4caf50);
+}
+
+.input-checkbox-select {
+	background: var(--color-background, #2e2e2e);
+	border: 1px solid var(--color-border, #555);
+	color: var(--color-text, #fff);
+	padding: 6px 8px;
+	min-width: 180px;
+	max-width: 280px;
+	outline: none;
+}
+
+.input-checkbox-select:focus {
+	border-color: var(--color-primary, #4caf50);
 }
 
 .node-actions {

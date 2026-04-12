@@ -25,6 +25,14 @@ export interface InputStringBar {
     [key: string]: any;
 }
 
+export interface InputCheckbox {
+    boxID: string;
+    inputHint: string;
+    choices: string[];
+    chooseIndex: number;
+    [key: string]: any;
+}
+
 export interface GameNodeInfo {
     nodeID: string;
 
@@ -48,6 +56,7 @@ export interface GameNodeInfo {
 
     inputSlots?: { [key: string]: InputSlot };
     inputStringBars?: { [key: string]: InputStringBar };
+    inputCheckboxes?: { [key: string]: InputCheckbox };
 
     interactable?: boolean;
 }
@@ -64,7 +73,7 @@ export interface GameCharacterInfo {
     characterName: string;
     characterDescription: string;
 
-    attributes: Map<string, Attributes>;
+    attributes: Record<string, Attributes>;
     storage?: Record<string, any>;
 
     accountRecord?: AccountRecordInfo;

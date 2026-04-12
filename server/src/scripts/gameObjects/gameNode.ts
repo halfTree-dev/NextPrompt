@@ -20,6 +20,14 @@ export interface InputSlot {
     [key: string]: any;
 }
 
+export interface InputCheckbox {
+    boxID: string;
+    inputHint: string;
+    choices: string[];
+    chooseIndex: number;
+    [key: string]: any;
+}
+
 export interface InputStringBar {
     barID: string;
     inputHint: string;
@@ -63,6 +71,7 @@ export class GameNode {
 
     inputSlots?: Map<string, InputSlot> = new Map();
     inputStringBars?: Map<string, InputStringBar> = new Map();
+    inputCheckboxes?: Map<string, InputCheckbox> = new Map();
 
     interactable?: boolean = false;
     onInteractCallback?: ((context: InteractCallbackContext) => void | Promise<void>) | null = null;
@@ -89,6 +98,7 @@ export class GameNodeTemplate {
 
     inputSlots?: Map<string, InputSlot> = new Map();
     inputStringBars?: Map<string, InputStringBar> = new Map();
+    inputCheckboxes?: Map<string, InputCheckbox> = new Map();
 
     interactable?: boolean = false;
     onInteractCallback?: ((context: InteractCallbackContext) => void | Promise<void>) | null = null;
@@ -114,6 +124,7 @@ export function createGameNodeFromTemplate(template: GameNodeTemplate, nodeID: s
     node.tags = templateData.tags;
     node.inputSlots = templateData.inputSlots;
     node.inputStringBars = templateData.inputStringBars;
+    node.inputCheckboxes = templateData.inputCheckboxes;
     node.interactable = templateData.interactable;
     node.onInteractCallback = templateData.onInteractCallback;
     node.hasAdvanceEvent = templateData.hasAdvanceEvent;

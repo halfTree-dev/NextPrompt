@@ -9,11 +9,18 @@ import socketService from "../services/socketManager";
 import accountManager from "../services/accountManager";
 import dataManager, { AccountRecord } from "../services/dataManger";
 import logger from "../utils/logger";
-import { Attributes } from "./gameObjects/gameCharacter";
-import GameNode, { InputSlot, InputStringBar, RelatedCharacter, Tag as NodeTag } from "./gameObjects/gameNode";
+import GameCharacter, { Attributes } from "./gameObjects/gameCharacter";
+import GameNode, { InputCheckbox, InputSlot, InputStringBar, RelatedCharacter, Tag as NodeTag } from "./gameObjects/gameNode";
 import { cloneDeep } from "lodash";
 import { Socket } from "socket.io";
 import { GuideManager } from "./managers/guideManager";
+
+interface UpdateInputPayload {
+    nodeID: string;
+    inputSlots: Record<string, InputSlot>;
+    inputStringBars: Record<string, InputStringBar>;
+    inputCheckboxes: Record<string, InputCheckbox>;
+}
 
 export class GameLevel {
     levelID: string = "";
@@ -59,6 +66,10 @@ export class GameLevel {
         });
 
         socketService.on("req_send_game_chat", (socket, payload) => {
+            if (!socket.rooms.has(this.levelID)) {
+                // 如果玩家不在当前关卡的房间里，则忽略
+                return;
+            }
             const account = accountManager.findAccountBySocket(socket);
             if (account && this.onlineAccounts.has(account.accountId)) {
                 this.updateNewContextMessage({
@@ -71,17 +82,35 @@ export class GameLevel {
             accountManager.cancelSocketOpLock(socket);
         });
 
-        socketService.on("req_update_input", (socket, payload : { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) => {
+        socketService.on("req_update_input", (socket, payload : UpdateInputPayload) => {
+            if (!socket.rooms.has(this.levelID)) {
+                // 如果玩家不在当前关卡的房间里，则忽略
+                return;
+            }
             this.updateInput(socket, payload);
             accountManager.cancelSocketOpLock(socket);
         });
 
-        socketService.on("req_send_interact", (socket, payload : {nodeID: string}) => {
-            this.respondToInteract(socket, payload);
-            accountManager.cancelSocketOpLock(socket);
+        socketService.on("req_send_interact", async (socket, payload : {nodeID: string}) => {
+            try {
+                if (!socket.rooms.has(this.levelID)) {
+                    // 如果玩家不在当前关卡的房间里，则忽略
+                    return;
+                }
+                await this.respondToInteract(socket, payload);
+                accountManager.cancelSocketOpLock(socket);
+            } catch (error) {
+                logger.error(`处理玩家交互请求时发生错误： ${error}`);
+                socket.emit("ack_send_interact", { success: false, message: "处理交互请求时发生错误，请与开发者联系。" });
+                accountManager.cancelSocketOpLock(socket);
+            }
         });
 
         socketService.on("req_end_turn", (socket, payload : { endTurnFlag: boolean }) => {
+            if (!socket.rooms.has(this.levelID)) {
+                // 如果玩家不在当前关卡的房间里，则忽略
+                return;
+            }
             this.respondToEndTurn(socket, payload);
             accountManager.cancelSocketOpLock(socket);
         });
@@ -97,6 +126,10 @@ export class GameLevel {
         this.onlineAccountsReadyForEndTurn.delete(accountId);
     }
 
+    getAccountFromId(accountId: string): AccountRecord | undefined {
+        return dataManager.getAccount(accountId);
+    }
+
     getSocketFromAccount(accountId: string) {
         const sockets = socketService.getSocketsInRoom(this.levelID);
         return sockets.find(socket => {
@@ -105,20 +138,17 @@ export class GameLevel {
         });
     }
 
-    updateInput(socket: Socket, payload: { nodeID: string; inputSlots: Record<string, InputSlot>; inputStringBars: Record<string, InputStringBar> }) {
+    updateInput(socket: Socket, payload: UpdateInputPayload) {
         const account = accountManager.findAccountBySocket(socket);
-        if (!socket.rooms.has(this.levelID)) {
-            // 如果玩家不在当前关卡的房间里，则忽略
-            return;
-        }
         if (!account || !this.onlineAccounts.has(account.accountId)) {
             socket.emit("ack_update_input", { success: false, message: "未登录或不在当前关卡中，无法更新输入" });
             logger.warn(`收到未登录玩家的输入更新请求，已拒绝，其 Socket 为 ${socket}`);
             return;
         }
         const nodeID = payload.nodeID;
-        const inputSlots = payload.inputSlots;
-        const inputStringBars = payload.inputStringBars;
+        const inputSlots = payload.inputSlots || {};
+        const inputStringBars = payload.inputStringBars || {};
+        const inputCheckboxes = payload.inputCheckboxes || {};
 
         const node = this.nodeManager.nodes.get(nodeID);
         if (!node) {
@@ -156,12 +186,6 @@ export class GameLevel {
                     }
                 }
             }
-            if (node.inputStringBars && node.inputStringBars.get(slotID)) {
-                const targetInputStringBar = node.inputStringBars.get(slotID);
-                if (targetInputStringBar) {
-                    targetInputStringBar.inputContent = slotValue.inputContent;
-                }
-            }
         }
         for (const [stringBarID, stringBarValue] of Object.entries(inputStringBars)) {
             if (node.inputStringBars && node.inputStringBars.get(stringBarID)) {
@@ -171,16 +195,28 @@ export class GameLevel {
                 }
             }
         }
+        for (const [boxID, boxValue] of Object.entries(inputCheckboxes)) {
+            if (node.inputCheckboxes && node.inputCheckboxes.get(boxID)) {
+                const targetInputCheckbox = node.inputCheckboxes.get(boxID);
+                if (targetInputCheckbox) {
+                    if (Number.isInteger(boxValue.chooseIndex)
+                        && boxValue.chooseIndex >= 0
+                        && boxValue.chooseIndex < targetInputCheckbox.choices.length) {
+                        targetInputCheckbox.chooseIndex = boxValue.chooseIndex;
+                    } else {
+                        // 当复选框是非法值时，不作任何动作，因为也可能是玩家输入为空
+                        // logger.warn(`玩家 ${account.userName} 试图为节点 ${nodeID} 的复选框 ${boxID} 设置非法选项索引 ${boxValue.chooseIndex}，已拒绝`);
+                        // socket.emit("ack_update_input", { success: false, message: `试图设置非法选项索引 ${boxValue.chooseIndex}` });
+                    }
+                }
+            }
+        }
         socket.emit("ack_update_input", { success: true, message: "输入更新成功" });
         this.broadcastGameContext();
     }
 
-    respondToInteract(socket: Socket, payload: { nodeID: string }) {
+    async respondToInteract(socket: Socket, payload: { nodeID: string }): Promise<void> {
         const account = accountManager.findAccountBySocket(socket);
-        if (!socket.rooms.has(this.levelID)) {
-            // 如果玩家不在当前关卡的房间里，则忽略
-            return;
-        }
         if (!account || !this.onlineAccounts.has(account.accountId)) {
             socket.emit("ack_send_interact", { success: false, message: "未登录或不在当前关卡中，无法执行交互" });
             logger.warn(`收到未登录玩家的交互请求，已拒绝，其 Socket 为 ${socket}`);
@@ -212,22 +248,23 @@ export class GameLevel {
                 logger: logger,
                 node: node,
                 account: account,
+            };
+            try {
+                await Promise.resolve(node.onInteractCallback(context));
+                socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
+                this.broadcastGameContext();
+            } catch (err) {
+                logger.error(`节点 ${nodeID} 执行交互回调时发生异常: ${err}`);
+                socket.emit("ack_send_interact", { success: false, message: "交互执行失败，故事脚本在执行交互时发生异常，请与开发者联系。" });
             }
-            node.onInteractCallback(context);
-            socket.emit("ack_send_interact", { success: true, message: "交互执行成功" });
-            this.broadcastGameContext();
         } else {
             logger.warn(`节点 ${nodeID} 没有交互回调函数，无法执行交互`);
             socket.emit("ack_send_interact", { success: false, message: "节点没有交互回调函数，无法执行交互，这很可能是该故事脚本的问题，请与开发者联系！" });
         }
     }
 
-    respondToEndTurn(socket: Socket, payload: { endTurnFlag: boolean }) {
+     async respondToEndTurn(socket: Socket, payload: { endTurnFlag: boolean }) {
         const account = accountManager.findAccountBySocket(socket);
-        if (!socket.rooms.has(this.levelID)) {
-            // 如果玩家不在当前关卡的房间里，则忽略
-            return;
-        }
         if (!account || !this.onlineAccounts.has(account.accountId)) {
             socket.emit("ack_end_turn", { success: false, message: "未登录或不在当前关卡中，无法结束回合" });
             logger.warn(`收到未登录玩家的结束回合请求，已拒绝`);
@@ -241,9 +278,9 @@ export class GameLevel {
                     level: this,
                     logger: logger,
                 }
-                this.hookManager.playerSetReadyEvent(context, account);
+                await Promise.resolve(this.hookManager.playerSetReadyEvent(context, account));
             }
-            this.checkAllReadyForNextTurnAndExecuteAdvance();
+            await this.checkAllReadyForNextTurnAndExecuteAdvance();
             this.broadcastEndTurnResult();
         } else {
             this.hookManager.playerSetReadyStatus({ level: this, logger: logger }, account, false);
@@ -253,7 +290,7 @@ export class GameLevel {
                     level: this,
                     logger: logger,
                 }
-                this.hookManager.playerSetUnreadyEvent(context, account);
+                await Promise.resolve(this.hookManager.playerSetUnreadyEvent(context, account));
             }
             this.broadcastEndTurnResult();
         }
@@ -276,16 +313,17 @@ export class GameLevel {
                 tags: node.tags,
                 inputSlots: node.inputSlots ? Object.fromEntries(node.inputSlots.entries()) : undefined,
                 inputStringBars: node.inputStringBars ? Object.fromEntries(node.inputStringBars.entries()) : undefined,
+                inputCheckboxes: node.inputCheckboxes ? Object.fromEntries(node.inputCheckboxes.entries()) : undefined,
                 interactable: node.interactable,
             };
         }
 
-        function turnCharacterIntoInfo(character : any) : GameCharacterInfo {
+        function turnCharacterIntoInfo(character : GameCharacter) : GameCharacterInfo {
             return {
                 characterID: character.characterID,
                 characterName: character.characterName,
                 characterDescription: character.characterDescription,
-                attributes: character.attributes,
+                attributes: Object.fromEntries(character.attributes.entries()),
                 storage: character.storage,
                 accountRecord: character.accountRecord,
             };
@@ -313,7 +351,9 @@ export class GameLevel {
         const sockets = socketService.getSocketsInRoom(this.levelID);
         for (const socket of sockets) {
             const account = accountManager.findAccountBySocket(socket);
-            const characterForAccount = account ? this.characterManager.characters.get(account.accountId) : null;
+            const characterForAccount = account
+                ? Array.from(this.characterManager.characters.values()).find(character => character.accountRecord?.accountId === account.accountId) || null
+                : null;
             if (characterForAccount) {
                 // 特别地，对于正在操控角色的玩家而言，他只能看见自己的节点
                 const filteredResult = cloneDeep(result);
@@ -352,7 +392,7 @@ export class GameLevel {
         }
     }
 
-    goNextRound() {
+    async goNextRound() {
         this.currRound += 1;
         for (const node of this.nodeManager.nodes.values()) {
             if (node.lifeTimeRounds && node.lifeTimeRounds > 0) {
@@ -370,7 +410,7 @@ export class GameLevel {
                 node.onAdvanceCallback(context);
             }
         }
-        this.hookManager.storyAdvanceEvent?.({ level: this, logger: logger });
+        await Promise.resolve(this.hookManager.storyAdvanceEvent?.({ level: this, logger: logger }));
         this.broadcastGameContext();
         for (const accountId of this.onlineAccounts) {
             this.onlineAccountsReadyForEndTurn.set(accountId, false);
@@ -400,7 +440,7 @@ export class GameLevel {
         }
     }
 
-    checkAllReadyForNextTurnAndExecuteAdvance() : boolean {
+    async checkAllReadyForNextTurnAndExecuteAdvance() : Promise<boolean> {
         if (this.onlineAccounts.size === 0) {
             logger.info(`当前关卡 ${this.levelID} 中没有在线玩家，无法进入下一回合`);
             return false;
@@ -410,7 +450,7 @@ export class GameLevel {
                 return false;
             }
         }
-        this.goNextRound();
+        await this.goNextRound();
         logger.info(`所有玩家都已准备好，进入下一回合 ${this.currRound}`);
         return true;
     }
@@ -462,6 +502,7 @@ interface GameNodeInfo {
 
     inputSlots?: { [key: string]: InputSlot };
     inputStringBars?: { [key: string]: InputStringBar };
+    inputCheckboxes?: { [key: string]: InputCheckbox };
 
     interactable?: boolean;
 }
